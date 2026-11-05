@@ -1,5 +1,6 @@
-const CACHE_NAME="nmt-english-v1.1.0";
-const APP_FILES=["./","./index.html","./styles.css","./app.js","./questions.js","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png"];
-self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(APP_FILES)));self.skipWaiting();});
-self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith("nmt-english-")&&k!==CACHE_NAME).map(k=>caches.delete(k)))));self.clients.claim();});
-self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(caches.match(e.request).then(hit=>hit||fetch(e.request).then(r=>{if(r&&r.status===200&&new URL(e.request.url).origin===self.location.origin){const copy=r.clone();caches.open(CACHE_NAME).then(c=>c.put(e.request,copy));}return r;}).catch(()=>caches.match("./index.html"))));});
+"use strict";
+const CACHE_NAME="nmt-english-v1.2.0";
+const FILES=["./","./index.html","./styles.css","./app.js","./questions.js","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png"];
+self.addEventListener("install",e=>e.waitUntil((async()=>{const c=await caches.open(CACHE_NAME);await Promise.all(FILES.map(async f=>{try{const r=await fetch(f,{cache:"reload"});if(r.ok)await c.put(f,r);}catch(_){}}));await self.skipWaiting();})()));
+self.addEventListener("activate",e=>e.waitUntil((async()=>{const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith("nmt-english-")&&k!==CACHE_NAME).map(k=>caches.delete(k)));await self.clients.claim();})()));
+self.addEventListener("fetch",e=>{const q=e.request;if(q.method!=="GET"||new URL(q.url).origin!==self.location.origin)return;e.respondWith((async()=>{const c=await caches.open(CACHE_NAME);try{const r=await fetch(q);if(r.ok){const u=new URL(q.url);u.search="";await c.put(u.pathname==="/"?"./":u.pathname,r.clone());}return r;}catch(_){const u=new URL(q.url),k=u.pathname.endsWith("/")?"./":u.pathname;const hit=await c.match(k)||await c.match(q);if(hit)return hit;if(q.mode==="navigate")return(await c.match("./index.html"))||Response.error();return Response.error();}})());});
