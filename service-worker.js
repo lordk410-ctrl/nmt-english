@@ -1,9 +1,9 @@
-const CACHE_NAME = "nmt-english-shell-v1";
+const CACHE_NAME = "nmt-english-shell-v2";
 const APP_FILES = [
   "./",
   "./index.html",
   "./styles.css",
-  "./app.js",
+  "./app.js", "./questions.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png"

@@ -1,4 +1,4 @@
-const QUESTIONS = [
+const QUESTIONS = window.NMT_QUESTIONS || [
   {id:"g01",topic:"Грамматика",level:1,q:"If I ___ more time, I would join the course.",o:["have","had","will have","would have"],a:1,e:"Во втором типе условных предложений после if используется Past Simple; в главной части обычно would + infinitive."},
   {id:"g02",topic:"Грамматика",level:1,q:"She ___ in Kyiv since 2021.",o:["lives","lived","has lived","is living"],a:2,e:"Since указывает на момент начала, а действие продолжается до настоящего. Нужен Present Perfect."},
   {id:"g03",topic:"Грамматика",level:1,q:"The documents ___ yesterday.",o:["sent","were sent","have sent","are sending"],a:1,e:"Это Passive Voice в Past Simple: was/were + past participle."},
