@@ -2,19 +2,19 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#173451"><meta name="description" content="Бесплатная подготовка по английскому языку.">
+<meta name="theme-color" content="#6d5ce7"><meta name="description" content="NotiTest — развивающие тесты и ежедневная практика для учёбы.">
 <link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icons/icon-192.png">
-<link rel="stylesheet" href="./styles.css?v=1.7.0"><title>NotiTest</title>
+<link rel="stylesheet" href="./styles.css?v=1.8.0"><title>NotiTest</title>
 </head>
 <body>
 <div class="app-shell">
-<header class="topbar"><button class="brand-mark" id="homeButton" aria-label="На главную">N</button><div><p class="eyebrow">ПОДГОТОВКА К ТЕСТАМ</p><h1>NotiTest</h1></div><button class="icon-button" id="installHelp" aria-label="Как установить">＋</button></header>
+<header class="topbar"><button class="brand-mark" id="homeButton" aria-label="На главную">N<span class="brand-spark">✦</span></button><div class="brand-copy"><p class="eyebrow">УЧИСЬ · ПРОБУЙ · РАСТИ</p><h1>NotiTest</h1><span class="brand-caption">Тесты для развития каждый день</span></div><button class="icon-button" id="installHelp" aria-label="Как установить">＋</button></header>
 <nav class="tabs" aria-label="Разделы">
-<button class="tab active" data-view="today">Сегодня</button><button class="tab" data-view="bank">Все вопросы</button><button class="tab" data-view="practice">Практика</button><button class="tab" data-view="stats">Прогресс</button>
+<button class="tab" data-view="today">Сегодня</button><button class="tab" data-view="bank">Все вопросы</button><button class="tab" data-view="practice">Практика</button><button class="tab" data-view="stats">Прогресс</button>
 </nav>
 <main>
 <section id="view-home" class="view active">
-<div class="home-welcome"><p class="eyebrow">ТВОЯ УЧЕБНАЯ ПАНЕЛЬ</p><h2>Привет!<br>Продолжим английский?</h2><p class="muted">Небольшие шаги каждый день приводят к большим результатам.</p></div>
+<div class="home-welcome"><div class="welcome-topline"><p class="eyebrow">ТВОЁ ПРОСТРАНСТВО ДЛЯ РОСТА</p><span class="welcome-chip">✦ каждый день</span></div><h2>Знания любят<br><span>движение.</span></h2><p class="muted">Проверяй себя, открывай новое и замечай, как растут твои знания.</p><div class="welcome-decoration" aria-hidden="true"><span>✳</span><i></i><b></b></div></div>
 <div class="home-shortcuts">
 <button class="home-tile streak-tile" data-go="stats"><span class="home-tile-icon">🔥</span><span class="home-tile-label">ТВОЯ СЕРИЯ</span><strong id="home-streak">0 дней</strong><small>Поддерживай учебный ритм</small><span class="tile-arrow">↗</span></button>
 <button class="home-tile daily-tile" data-go="today"><span class="home-tile-icon">📅</span><span class="home-tile-label">СЕГОДНЯШНЕЕ ЗАДАНИЕ</span><strong id="home-daily-status">Не выполнено</strong><small id="home-daily-detail">0 из 20 заданий</small><span class="tile-arrow">↗</span></button>
@@ -22,12 +22,12 @@
 <section class="facts-card" aria-label="Интересные факты об английском языке">
 <div class="facts-heading"><span class="facts-icon">💡</span><div><p class="card-label">МИНУТА ЛЮБОПЫТСТВА</p><h3>Знаешь ли ты?</h3></div><span class="facts-counter" id="fact-counter">1 / 12</span></div>
 <p class="fact-text" id="fact-text" aria-live="polite">В английском алфавите 26 букв.</p>
-<div class="fact-footer"><div class="fact-dots" id="fact-dots" aria-label="Выбрать факт"></div><button class="fact-next" id="fact-next" type="button" aria-label="Следующий факт">Следующий факт <span aria-hidden="true">→</span></button></div><span class="fact-timer-note"></span>
+<div class="fact-footer"><div class="fact-dots" id="fact-dots" aria-label="Выбрать факт"></div><button class="fact-next" id="fact-next" type="button" aria-label="Следующий факт">Следующий факт <span aria-hidden="true">→</span></button></div><span class="fact-timer-note">Факты меняются автоматически каждые 30 секунд</span>
 </section>
 <button class="home-start-button" data-go="today">Перейти к заданиям <span>→</span></button>
 </section>
 <section id="view-today" class="view">
-<div class="intro"><p class="eyebrow">ЕЖЕДНЕВНАЯ ПРАКТИКА</p><h2>Английский<br>без пробелов.</h2><p class="muted">20 заданий в день. Чёткие объяснения. Прогресс, который можно измерить.</p></div>
+<div class="intro"><p class="eyebrow">ЕЖЕДНЕВНАЯ ПРАКТИКА</p><h2>Тренировка<br>для ума.</h2><p class="muted">20 заданий, полезные объяснения и маленький шаг к новым знаниям каждый день.</p></div>
 <article class="progress-card"><div class="row between"><div><p class="card-label">ТРЕНИРОВКА НА СЕГОДНЯ</p><strong id="progress-count">0 из 20</strong></div><span class="date-pill" id="today-date"></span></div><div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div><p class="muted small" id="progress-caption"></p></article><section id="quiz-area"></section>
 </section>
 <section id="view-bank" class="view"><div class="section-heading"><p class="eyebrow">БИБЛИОТЕКА</p><h2>Все вопросы</h2><p class="muted" id="bank-count">Загрузка банка…</p></div>
@@ -41,8 +41,8 @@
 <div class="panel settings"><h3>Оформление</h3><label for="theme-select">Тема приложения</label><select id="theme-select"><option value="system">Как на iPhone</option><option value="light">Светлая</option><option value="dark">Тёмная</option></select></div>
 </section>
 </main>
-<footer><span>Учись регулярно. Улучшай результат постепенно.</span><span class="footer-sub">Авторские тренировочные задания, не официальные вопросы.</span><span class="version">NotiTest · v1.7.0</span><span class="footer-sub">Обновлено: 5 ноября 2026</span></footer>
+<footer><span>Любопытство сегодня. Уверенность завтра.</span><span class="footer-sub">Развивающие тесты и практика для учёбы.</span><span class="version">NotiTest · v1.8.0</span><span class="footer-sub">Обновлено: 5 ноября 2026</span></footer>
 </div>
 <dialog id="installDialog"><div class="dialog-head"><p class="eyebrow">УСТАНОВКА НА IPHONE</p><button class="close-button" id="closeInstall">×</button></div><h2>Добавь NotiTest на экран «Домой»</h2><ol><li>Открой сайт в Safari.</li><li>Нажми «Поделиться».</li><li>Выбери «На экран Домой».</li><li>Подтверди добавление.</li></ol><p class="muted small">Для офлайн-режима сначала открой приложение при подключённом интернете.</p><button class="primary-button full" id="doneInstall">Понятно</button></dialog>
-<script src="./questions.js?v=1.7.0"></script><script src="./app.js?v=1.7.0"></script>
+<script src="./questions.js?v=1.8.0"></script><script src="./app.js?v=1.8.0"></script>
 </body></html>

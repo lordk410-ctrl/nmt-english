@@ -1,6 +1,6 @@
 (() => {
 "use strict";
-const VERSION="1.7.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
+const VERSION="1.8.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
 const TOPICS=["Грамматика","Лексика","Use of English","Чтение"], $=id=>document.getElementById(id);
 const freshSession=date=>({date,ids:shuffle(QUESTIONS.map(q=>q.id),hash(date)).slice(0,20),index:0,answers:[]});
 // Учебные сутки идут по московскому времени: с 03:00 до 02:59 следующего дня.
@@ -72,7 +72,7 @@ function setTheme(v){
  document.documentElement.style.colorScheme=theme==="system"?"light dark":theme;
  try{localStorage.setItem("nmt-theme",theme);}catch(e){console.warn("Не удалось сохранить тему:",e);}
  const meta=document.querySelector('meta[name="theme-color"]');
- if(meta)meta.setAttribute("content",theme==="dark"?"#101b28":theme==="light"?"#f2f5f7":"#173451");
+ if(meta)meta.setAttribute("content",theme==="dark"?"#111827":theme==="light"?"#f5f6ff":"#6d5ce7");
 }
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>activate(t.dataset.view)));$("homeButton").addEventListener("click",()=>activate("home"));document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>activate(b.dataset.go)));showFact(0);
 function checkDailyRollover(){const key=today();if(state.session.date!==key){state.session=freshSession(key);selected=null;submitted=false;save();render();return true;}return false;}
