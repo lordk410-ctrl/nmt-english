@@ -1,12 +1,14 @@
 {
-  "name": "NotiTest",
-  "short_name": "NotiTest",
-  "description": "Практика английского языка и общих тестов.",
+  "name": "NMT English",
+  "short_name": "NMT English",
+  "description": "Ежедневная подготовка к НМТ по английскому языку",
+  "lang": "ru",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f4f6f8",
-  "theme_color": "#f4f6f8",
+  "orientation": "portrait",
+  "background_color": "#f2f5f7",
+  "theme_color": "#173451",
   "icons": [
     {
       "src": "./icons/icon-192.png",

@@ -1,144 +1,49 @@
-const QUESTIONS = window.NMT_QUESTIONS || [];
-const STORAGE_KEY = "nmt-english-pwa-v1";
-const TOPICS = ["Грамматика", "Лексика", "Use of English", "Чтение"];
-const $ = id => document.getElementById(id);
-let state = loadState();
-let selectedAnswer = null, submitted = false, libraryLimit = 40, practiceQueue = [], practiceIndex = 0, practiceMode = "all";
-function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
-function hashString(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
-function shuffle(a,seed){let x=seed||1,r=()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return(x>>>0)/4294967296;};a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function newSession(date){return {date,ids:shuffle(QUESTIONS.map(q=>q.id),hashString(date)).slice(0,20),index:0,answers:[]};}
-function loadState(){
- try{
-  const s=JSON.parse(localStorage.getItem(STORAGE_KEY))||{};
-  const records=Array.isArray(s.records)?s.records:[];
-  const days=Array.isArray(s.days)?s.days:[];
-  let session=s.session;
-  if(!session||session.date!==todayKey()||!Array.isArray(session.ids)||session.ids.some(id=>!QUESTIONS.some(q=>q.id===id))) session=newSession(todayKey());
-  return {...s,session,records,days,theme:s.theme||"auto",hardIds:Array.isArray(s.hardIds)?s.hardIds:[]};
- }catch{return {session:newSession(todayKey()),records:[],days:[],theme:"auto",hardIds:[]};}
-}
+(() => {
+"use strict";
+const VERSION="1.1.0", QUESTIONS=window.NMT_QUESTIONS||[], STORAGE_KEY="nmt-english-pwa-v1";
+const TOPICS=["Грамматика","Лексика","Use of English","Чтение"], $=id=>document.getElementById(id);
+const freshSession=date=>({date,ids:shuffle(QUESTIONS.map(q=>q.id),hash(date)).slice(0,20),index:0,answers:[]});
+function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function shuffle(items,seed){let x=seed||1,a=[...items];const rand=()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return(x>>>0)/4294967296;};for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function load(){try{const s=JSON.parse(localStorage.getItem(STORAGE_KEY));if(s&&s.session){if(s.session.date!==today())s.session=freshSession(today());s.records=s.records||[];s.days=s.days||[];return s;}}catch(e){}return{session:freshSession(today()),records:[],days:[]};}
+let state=load(), selected=null, submitted=false, practice={ids:[],index:0,selected:null,submitted:false};
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
-function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function applyTheme(){document.documentElement.dataset.theme=state.theme; $("themeSelect").value=state.theme;}
-function switchView(name){
- document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===name));
- document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${name}`));
- if(name==="library")renderLibrary(); if(name==="practice")renderPracticeHome(); if(name==="progress")renderProgress();
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function question(id){return QUESTIONS.find(q=>q.id===id);}
+function activate(view){document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===view));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));if(view==="bank")renderBank();if(view==="practice")renderPractice();}
+function render(){const done=state.session.index;$("today-date").textContent=new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"short"});$("progress-count").textContent=`${done} из 20`;$("progress-fill").style.width=`${done/20*100}%`;$("progress-caption").textContent=done===20?"Все задания на сегодня выполнены.":`Осталось заданий: ${20-done}.`;renderDaily();renderStats();}
+function renderDaily(){const area=$("quiz-area");if(state.session.index>=20){area.innerHTML=`<article class="completion-card"><div class="completion-icon">✦</div><h2>Тренировка завершена</h2><div class="score">${state.session.answers.filter(a=>a.correct).length} / 20</div><p class="muted">Правильных ответов сегодня</p><p class="muted small">Новая подборка появится завтра. Свободная практика доступна без ограничений.</p></article>`;return;}renderQuestion(area,question(state.session.ids[state.session.index]),state.session.index+1,20,selected,submitted,"daily");}
+function renderQuestion(area,q,n,total,chosen,done,mode){if(!q){area.innerHTML='<p class="empty-state">Вопросы не найдены. Проверь, загружен ли questions.js.</p>';return;}
+const opts=q.o.map((v,i)=>{let c="option";if(chosen===i)c+=" selected";if(done&&i===q.a)c+=" correct";else if(done&&i===chosen)c+=" wrong";return `<button class="${c}" data-choice="${i}" ${done?"disabled":""}><span class="option-letter">${"ABCD"[i]}</span><span class="option-text">${esc(v)}</span></button>`;}).join("");
+const feedback=done?`<div class="feedback show"><h3>${chosen===q.a?"Верно!":"Разберём ответ"}</h3><p class="answer-line">Правильный ответ: ${esc(q.o[q.a])}</p><p>${chosen===q.a?esc(q.e):`Твой вариант «${esc(q.o[chosen])}» не подходит. ${esc(q.e)}`}</p></div>`:"";
+area.innerHTML=`<article class="question-card"><div class="question-meta"><span class="topic-tag">${esc(q.topic)}</span><span class="level-tag">Уровень ${q.level} · ${n}/${total}</span></div><h2 class="question-text">${esc(q.q)}</h2><div class="options">${opts}</div>${feedback}<button class="primary-button" id="answerAction" ${done?"":"disabled"}>${done?(mode==="daily"?"Следующее задание":"Следующий вопрос"):"Проверить ответ"}</button></article>`;
+area.querySelectorAll("[data-choice]").forEach(b=>b.addEventListener("click",()=>{if(mode==="daily"){selected=+b.dataset.choice;renderDaily();}else{practice.selected=+b.dataset.choice;renderPractice();}}));
+$("answerAction").addEventListener("click",()=>{if(mode==="daily"){if(!submitted)submitDaily();else nextDaily();}else{if(!practice.submitted)submitPractice();else nextPractice();}});
 }
-function render(){
- if(state.session.date!==todayKey())state.session=newSession(todayKey());
- applyTheme();
- $("totalQuestions").textContent=QUESTIONS.length.toLocaleString("ru-RU");
- const done=state.session.index;
- $("progressCount").textContent=`${done} из 20`; $("progressFill").style.width=`${done/20*100}%`;
- $("progressCaption").textContent=done===20?"Все задания на сегодня выполнены.":`Осталось заданий: ${20-done}.`;
- $("todayDate").textContent=new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
- renderDaily();renderStats();renderTopics();renderProgress();
-}
-function renderDaily(){
- const area=$("dailyQuiz");
- if(state.session.index>=20){const n=state.session.answers.filter(x=>x.correct).length;area.innerHTML=`<article class="completion-card"><div class="completion-icon">✦</div><h2>Тренировка завершена</h2><div class="score">${n} / 20</div><p class="muted">Правильных ответов сегодня</p><p class="muted small">Результаты сохранены. Новая ежедневная подборка появится завтра.</p></article>`;return;}
- const q=QUESTIONS.find(x=>x.id===state.session.ids[state.session.index]); renderQuestion(area,q,"daily",state.session.index+1);
-}
-function renderQuestion(area,q,mode,number){
- if(!q){area.innerHTML='<p class="empty-state">Вопрос не найден.</p>';return;}
- const options=q.o.map((o,i)=>{let c="option";if(selectedAnswer===i)c+=" selected";if(submitted&&i===q.a)c+=" correct";else if(submitted&&i===selectedAnswer)c+=" wrong";return `<button class="${c}" data-opt="${i}" ${submitted?"disabled":""}><span class="option-letter">${"ABCD"[i]}</span><span class="option-text">${esc(o)}</span></button>`;}).join("");
- const feedback=submitted?`<div class="feedback show"><h3>${selectedAnswer===q.a?"Верно!":"Разберём ответ"}</h3><p class="answer-line">Правильный ответ: ${esc(q.o[q.a])}</p><p>${esc(q.e)}</p></div>`:"";
- area.innerHTML=`<article class="question-card"><div class="question-meta"><span class="topic-tag">${esc(q.topic)}</span><span class="level-tag">Уровень ${q.level} · ${number||""}</span></div><h2 class="question-text">${esc(q.q).replace(/\n/g,"<br>")}</h2><div class="options">${options}</div>${feedback}${submitted?'<button class="primary-button" id="advance">Следующий вопрос</button>':'<button class="primary-button" id="check" disabled>Проверить ответ</button>'}</article>`;
- area.querySelectorAll("[data-opt]").forEach(b=>b.addEventListener("click",()=>{if(submitted)return;selectedAnswer=+b.dataset.opt;renderQuestion(area,q,mode,number);$("check").disabled=false;}));
- if(!submitted)$("check").addEventListener("click",()=>submit(mode,q));
- else $("advance").addEventListener("click",()=>advance(mode));
-}
-function submit(mode,q){
- if(selectedAnswer===null||submitted)return;submitted=true;
- const rec={questionId:q.id,topic:q.topic,selected:selectedAnswer,correct:selectedAnswer===q.a,date:todayKey(),mode};
- state.records.push(rec);
- if(mode==="daily"){
-  state.session.answers.push(rec);
-  const d=state.days.find(x=>x.date===todayKey()),a=state.session.answers;
-  const day={date:todayKey(),answered:a.length,correct:a.filter(x=>x.correct).length,completed:a.length>=20};
-  if(d)Object.assign(d,day);else state.days.push(day);
- }else if(mode==="practice"){
-  if(!rec.correct&&!state.hardIds.includes(q.id))state.hardIds.push(q.id);
-  if(rec.correct)state.hardIds=state.hardIds.filter(id=>id!==q.id);
- }
- save();renderStats();renderTopics();renderProgress();
- const area=mode==="daily"?$("dailyQuiz"):$("practiceQuiz");
- renderQuestion(area,q,mode,mode==="daily"?state.session.index+1:practiceIndex+1);
-}
-function advance(mode){
- selectedAnswer=null;submitted=false;
- if(mode==="daily"){state.session.index++;save();render();return;}
- practiceIndex++;
- if(practiceIndex>=practiceQueue.length){$("practiceQuiz").innerHTML=`<article class="completion-card"><div class="completion-icon">✦</div><h2>Практика завершена</h2><p class="muted">Ты ответил(а) на ${practiceQueue.length} вопросов.</p><button class="primary-button" id="backPractice">К выбору тренировки</button></article>`;$("backPractice").onclick=renderPracticeHome;return;}
- renderQuestion($("practiceQuiz"),practiceQueue[practiceIndex],"practice",practiceIndex+1);
-}
-function renderStats(){
- const r=state.records,c=r.filter(x=>x.correct).length;
- $("statAnswered").textContent=r.length;$("statCorrect").textContent=c;$("statAccuracy").textContent=r.length?`${Math.round(c/r.length*100)}%`:"0%";
- $("statToday").textContent=`${state.session.answers.length}/20`;
- const days=[...state.days].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,14);
- $("dayHistory").innerHTML=days.length?days.map(d=>`<div class="history-row"><div class="history-top"><span>${formatDate(d.date)}</span><strong>${d.correct}/${d.answered}</strong></div><div class="mini-track"><div class="mini-fill" style="width:${d.answered?d.correct/d.answered*100:0}%"></div></div></div>`).join(""):'<p class="empty-state">Статистика появится после первых ответов.</p>';
-}
-function renderTopics(){
- const html=TOPICS.map(t=>{const a=state.records.filter(r=>r.topic===t),c=a.filter(x=>x.correct).length,p=a.length?Math.round(c/a.length*100):0;return `<article class="topic-item"><div class="topic-top"><span>${t}</span><span class="topic-percent">${a.length?p+"%":"—"}</span></div><div class="mini-track" style="margin-top:10px"><div class="mini-fill" style="width:${p}%"></div></div><p>Ответов: ${a.length} · ${!a.length?"пока нет данных":p<60?"стоит повторить":p<80?"есть куда расти":"хороший результат"}</p></article>`;}).join("");
- $("topicList").innerHTML=html;
-}
-function renderLibrary(){
- const query=$("searchQuestions").value.trim().toLowerCase(),topic=$("filterTopic").value,level=$("filterLevel").value;
- const list=QUESTIONS.filter(q=>(topic==="all"||q.topic===topic)&&(level==="all"||String(q.level)===level)&&(!query||`${q.q} ${q.o.join(" ")} ${q.e}`.toLowerCase().includes(query)));
- $("libraryCount").textContent=`Показано ${Math.min(libraryLimit,list.length)} из ${list.length} вопросов · всего ${QUESTIONS.length}`;
- $("libraryList").innerHTML=list.slice(0,libraryLimit).map(q=>`<article class="library-card"><div class="question-meta"><span class="topic-tag">${esc(q.topic)}</span><span class="level-tag">Уровень ${q.level}</span></div><p>${esc(q.q).replace(/\n/g,"<br>")}</p><button class="secondary-button" data-train="${q.id}">Тренировать этот вопрос</button></article>`).join("")||'<p class="empty-state">По этому запросу ничего не найдено.</p>';
- $("loadMore").hidden=list.length<=libraryLimit;
- $("libraryList").querySelectorAll("[data-train]").forEach(b=>b.onclick=()=>startPractice([b.dataset.train]));
-}
-function startPractice(ids){
- practiceQueue=ids.map(id=>QUESTIONS.find(q=>q.id===id)).filter(Boolean);practiceIndex=0;selectedAnswer=null;submitted=false;
- switchView("practice");$("practiceHome").hidden=true;$("practiceQuiz").hidden=false;$("backToPractice").hidden=false;
- renderQuestion($("practiceQuiz"),practiceQueue[0],"practice",1);
-}
-function renderPracticeHome(){
- $("practiceHome").hidden=false;$("practiceQuiz").hidden=true;
- $("practiceSummary").textContent=`В базе ${QUESTIONS.length} вопросов. Свободная практика не расходует ежедневные 20 заданий.`;
-}
-function beginPractice(kind){
- let qs=QUESTIONS;
- if(kind==="wrong"){const ids=new Set(state.records.filter(x=>!x.correct).map(x=>x.questionId));qs=QUESTIONS.filter(q=>ids.has(q.id));}
- if(kind==="hard")qs=QUESTIONS.filter(q=>state.hardIds.includes(q.id));
- if(kind==="topic"){const t=$("practiceTopic").value;qs=QUESTIONS.filter(q=>q.topic===t);}
- if(!qs.length){$("practiceNotice").textContent="Пока нет вопросов для этого режима. Ответь на задания или выбери другую тему.";return;}
- const n=kind==="all"?qs.length:Math.min(qs.length,100);
- startPractice(shuffle(qs.map(q=>q.id),Date.now()).slice(0,n));
-}
-function streak(){
- const completed=new Set(state.days.filter(d=>d.completed).map(d=>d.date));let n=0,d=new Date();
- if(!completed.has(todayKey()))d.setDate(d.getDate()-1);
- while(completed.has(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`)){n++;d.setDate(d.getDate()-1);}
- return n;
-}
-function renderProgress(){
- const total=state.records.length,s=streak(),topicsDone=TOPICS.filter(t=>{const a=state.records.filter(r=>r.topic===t);return a.length>=10&&a.filter(r=>r.correct).length/a.length>=.8;}).length;
- $("streakValue").textContent=s;$("achievementList").innerHTML=[
- ["Первые шаги",total>=1,"Ответь на первый вопрос"],
- ["Разминка",total>=100,"100 ответов"],
- ["Сотня знаний",total>=500,"500 ответов"],
- ["Марафонец",total>=1000,"1000 ответов"],
- ["Три дня подряд",s>=3,"Заверши ежедневную тренировку 3 дня подряд"],
- ["Неделя практики",s>=7,"7 дней подряд"],
- ["Две недели",s>=14,"14 дней подряд"],
- ["Месяц дисциплины",s>=30,"30 дней подряд"],
- ["Мастер тем",topicsDone>=4,"Освой все четыре темы: минимум 10 ответов и 80% точности"]
- ].map(x=>`<article class="achievement ${x[1]?"earned":""}"><span class="medal">${x[1]?"★":"☆"}</span><div><strong>${x[0]}</strong><p>${x[2]}</p></div><span class="status">${x[1]?"Получено":"В процессе"}</span></article>`).join("");
-}
-function formatDate(k){const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("ru-RU",{day:"numeric",month:"short",year:"numeric"});}
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>switchView(t.dataset.view)));
-$("searchQuestions").addEventListener("input",()=>{libraryLimit=40;renderLibrary();});
-$("filterTopic").addEventListener("change",renderLibrary);$("filterLevel").addEventListener("change",renderLibrary);
-$("loadMore").onclick=()=>{libraryLimit+=40;renderLibrary();};
-$("themeSelect").addEventListener("change",()=>{state.theme=$("themeSelect").value;save();applyTheme();});
-$("startAll").onclick=()=>beginPractice("all");$("startWrong").onclick=()=>beginPractice("wrong");$("startHard").onclick=()=>beginPractice("hard");$("startTopic").onclick=()=>beginPractice("topic");
-$("backToPractice").onclick=()=>{selectedAnswer=null;submitted=false;renderPracticeHome();};
-$("installHelp").onclick=()=>$("installDialog").showModal();$("closeInstall").onclick=()=>$("installDialog").close();$("doneInstall").onclick=()=>$("installDialog").close();
+function submitDaily(){if(selected===null)return;submitted=true;const q=question(state.session.ids[state.session.index]);const r={questionId:q.id,topic:q.topic,selected,correct:selected===q.a,date:today(),mode:"daily"};state.session.answers.push(r);state.records.push(r);const d=state.days.find(x=>x.date===today());const summary={date:today(),answered:state.session.answers.length,correct:state.session.answers.filter(x=>x.correct).length};if(d)Object.assign(d,summary);else state.days.push(summary);save();render();}
+function nextDaily(){state.session.index++;selected=null;submitted=false;save();render();}
+function fillTopicSelect(id){const el=$(id);el.innerHTML='<option value="">Все темы</option>'+TOPICS.map(t=>`<option>${esc(t)}</option>`).join("");}
+function renderBank(){const search=($("bank-search").value||"").toLowerCase().trim(),topic=$("bank-topic").value,level=$("bank-level").value;const found=QUESTIONS.filter(q=>(!topic||q.topic===topic)&&(!level||String(q.level)===level)&&(!search||[q.q,...q.o,q.topic].join(" ").toLowerCase().includes(search)));$("bank-count").textContent=`Показано ${found.length} из ${QUESTIONS.length} вопросов`; $("bank-list").innerHTML=found.map(q=>`<article class="bank-item"><div class="question-meta"><span class="topic-tag">${esc(q.topic)}</span><span class="level-tag">Уровень ${q.level}</span></div><p>${esc(q.q)}</p><button class="secondary-button" data-practice-id="${esc(q.id)}">Тренировать этот вопрос</button></article>`).join("")||'<p class="empty-state">Ничего не найдено. Измени поиск или фильтры.</p>'; $("bank-list").querySelectorAll("[data-practice-id]").forEach(b=>b.addEventListener("click",()=>{practice.ids=[b.dataset.practiceId];practice.index=0;practice.selected=null;practice.submitted=false;activate("practice");renderPractice();}));}
+function startPractice(){const topic=$("practice-topic").value,mode=$("practice-mode").value;let pool=QUESTIONS.filter(q=>!topic||q.topic===topic);if(mode==="wrong"){const wrong=new Set(state.records.filter(r=>!r.correct).map(r=>r.questionId));pool=pool.filter(q=>wrong.has(q.id));}if(mode==="hard")pool=pool.filter(q=>q.level>=3);practice.ids=shuffle(pool.map(q=>q.id),Date.now()).slice(0,30);practice.index=0;practice.selected=null;practice.submitted=false;renderPractice();}
+function renderPractice(){const area=$("practice-area");if(!practice.ids.length){area.innerHTML='<p class="empty-state">Выбери тему и режим, затем нажми «Начать практику».</p><button class="primary-button" id="startPractice">Начать практику</button>';$("startPractice").addEventListener("click",startPractice);return;}if(practice.index>=practice.ids.length){area.innerHTML=`<article class="completion-card"><div class="completion-icon">✓</div><h2>Раунд завершён</h2><p class="muted">Ответы сохранены в общей статистике.</p><button class="primary-button" id="againPractice">Ещё раунд</button></article>`;$("againPractice").addEventListener("click",startPractice);return;}renderQuestion(area,question(practice.ids[practice.index]),practice.index+1,practice.ids.length,practice.selected,practice.submitted,"practice");}
+function submitPractice(){if(practice.selected===null)return;practice.submitted=true;const q=question(practice.ids[practice.index]);state.records.push({questionId:q.id,topic:q.topic,selected:practice.selected,correct:practice.selected===q.a,date:today(),mode:"practice"});save();renderStats();renderPractice();}
+function nextPractice(){practice.index++;practice.selected=null;practice.submitted=false;renderPractice();}
+function streak(){const completed=new Set(state.days.filter(d=>d.answered>=20).map(d=>d.date));let n=0,d=new Date();if(!completed.has(dateKey(d)))d.setDate(d.getDate()-1);while(completed.has(dateKey(d))){n++;d.setDate(d.getDate()-1);}return n;}
+function dateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+function maxStreak(){const dates=[...new Set(state.days.filter(d=>d.answered>=20).map(d=>d.date))].sort();let best=0,run=0,prev=null;for(const key of dates){const cur=new Date(key+"T12:00:00");const expected=prev?new Date(prev+"T12:00:00"):null;if(!prev||Math.round((cur-expected)/86400000)===1)run++;else run=1;best=Math.max(best,run);prev=key;}return best;}
+function renderStats(){const rs=state.records,correct=rs.filter(r=>r.correct).length;$("stat-answered").textContent=rs.length;$("stat-correct").textContent=correct;$("stat-accuracy").textContent=rs.length?`${Math.round(correct/rs.length*100)}%`:"0%";$("stat-today").textContent=`${state.session.answers.length}/20`;$("streak-count").textContent=`${streak()} ${plural(streak(),["день подряд","дня подряд","дней подряд"])}`;
+const milestones=[3,7,14,30],best=maxStreak();$("achievements").innerHTML=milestones.map(n=>`<div class="achievement ${best>=n?"earned":""}"><span>${best>=n?"🏅":"🔒"}</span><strong>${n} дней</strong><small>${best>=n?"Получено навсегда":`Лучшая серия: ${best}`}</small></div>`).join("")+[[50,"50 ответов"],[100,"100 ответов"],[500,"500 ответов"],[1000,"1000 ответов"]].map(([n,t])=>`<div class="achievement ${rs.length>=n?"earned":""}"><span>${rs.length>=n?"⭐":"🔒"}</span><strong>${t}</strong><small>${Math.min(rs.length,n)}/${n}</small></div>`).join("")+TOPICS.map(t=>{const a=rs.filter(r=>r.topic===t),c=a.filter(r=>r.correct).length,earned=a.length>=10&&c/a.length>=.8;return `<div class="achievement ${earned?"earned":""}"><span>${earned?"🎓":"🔒"}</span><strong>${esc(t)}</strong><small>${earned?"Тема освоена":`${a.length}/10 ответов, точность от 80%`}</small></div>`;}).join("");
+const days=[...state.days].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,14);$("day-history").innerHTML=days.length?days.map(d=>`<div class="history-row"><div class="history-top"><span>${formatDate(d.date)}</span><strong>${d.correct}/${d.answered}</strong></div><div class="mini-track"><div class="mini-fill" style="width:${d.answered/20*100}%"></div></div></div>`).join(""):'<p class="empty-state">История появится после ежедневных тренировок.</p>';
+const topics=TOPICS.map(t=>{const a=rs.filter(r=>r.topic===t),c=a.filter(r=>r.correct).length;return{t,a:a.length,p:a.length?Math.round(c/a.length*100):0};});$("topic-list").innerHTML=topics.map(x=>`<div class="topic-item"><div class="topic-top"><span>${esc(x.t)}</span><span>${x.a?x.p+"%":"—"}</span></div><div class="mini-track" style="margin-top:9px"><div class="mini-fill" style="width:${x.p}%"></div></div><p>Ответов: ${x.a}</p></div>`).join("");}
+function plural(n,forms){const x=n%100,y=n%10;return forms[x>10&&x<20?2:y>1&&y<5?1:y===1?0:2];}
+function formatDate(k){const[y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("ru-RU",{day:"numeric",month:"short",year:"numeric"});}
+function setTheme(v){document.documentElement.dataset.theme=v;localStorage.setItem("nmt-theme",v);}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>activate(t.dataset.view)));
+fillTopicSelect("bank-topic");fillTopicSelect("practice-topic");
+["bank-search","bank-topic","bank-level"].forEach(id=>$(id).addEventListener(id==="bank-search"?"input":"change",renderBank));
+$("theme-select").value=localStorage.getItem("nmt-theme")||"system";setTheme($("theme-select").value);$("theme-select").addEventListener("change",e=>setTheme(e.target.value));
+const dlg=$("installDialog");$("installHelp").addEventListener("click",()=>dlg.showModal());$("closeInstall").addEventListener("click",()=>dlg.close());$("doneInstall").addEventListener("click",()=>dlg.close());
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(console.error));
-render();renderLibrary();renderPracticeHome();
+if(!QUESTIONS.length)console.warn("questions.js не загрузился или пуст.");render();
+})();
