@@ -1,35 +1,109 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#173451"><meta name="description" content="Бесплатная подготовка к НМТ по английскому языку.">
-<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icons/icon-192.png">
-<link rel="stylesheet" href="./styles.css"><title>NMT English</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#173451">
+  <meta name="description" content="Бесплатная практика английского языка и общих тестов.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./styles.css">
+  <title>NotiTest</title>
 </head>
 <body>
-<div class="app-shell">
-<header class="topbar"><div class="brand-mark">N</div><div><p class="eyebrow">ПОДГОТОВКА К НМТ</p><h1>NMT English</h1></div><button class="icon-button" id="installHelp" aria-label="Как установить">＋</button></header>
-<nav class="tabs" aria-label="Разделы">
-<button class="tab active" data-view="today">Сегодня</button><button class="tab" data-view="bank">Все вопросы</button><button class="tab" data-view="practice">Практика</button><button class="tab" data-view="stats">Прогресс</button>
-</nav>
-<main>
-<section id="view-today" class="view active">
-<div class="intro"><p class="eyebrow">ЕЖЕДНЕВНАЯ ПРАКТИКА</p><h2>Английский<br>без пробелов.</h2><p class="muted">20 заданий в день. Чёткие объяснения. Прогресс, который можно измерить.</p></div>
-<article class="progress-card"><div class="row between"><div><p class="card-label">ТРЕНИРОВКА НА СЕГОДНЯ</p><strong id="progress-count">0 из 20</strong></div><span class="date-pill" id="today-date"></span></div><div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div><p class="muted small" id="progress-caption"></p></article><section id="quiz-area"></section>
-</section>
-<section id="view-bank" class="view"><div class="section-heading"><p class="eyebrow">БИБЛИОТЕКА</p><h2>Все вопросы</h2><p class="muted" id="bank-count">Загрузка банка…</p></div>
-<div class="filters"><input id="bank-search" type="search" placeholder="Поиск по вопросу или варианту"><select id="bank-topic"><option value="">Все темы</option></select><select id="bank-level"><option value="">Любая сложность</option><option value="1">Лёгкая</option><option value="2">Средняя</option><option value="3">Сложная</option></select></div><div id="bank-list" class="bank-list"></div></section>
-<section id="view-practice" class="view"><div class="section-heading"><p class="eyebrow">БЕЗ ДНЕВНОГО ЛИМИТА</p><h2>Свободная практика</h2><p class="muted">Эти ответы попадут в общую статистику, но не повлияют на ежедневные 20 заданий.</p></div>
-<div class="filters"><label>Тема<select id="practice-topic"><option value="">Все темы</option></select></label><label>Режим<select id="practice-mode"><option value="all">Все вопросы</option><option value="wrong">Мои ошибки</option><option value="hard">Сложные вопросы</option></select></label></div><div id="practice-area"></div></section>
-<section id="view-stats" class="view"><div class="section-heading"><p class="eyebrow">ТВОЙ ПРОГРЕСС</p><h2>Статистика и награды</h2><p class="muted">Результаты сохраняются на этом устройстве.</p></div>
-<div class="metric-grid"><article class="metric"><span>Всего ответов</span><strong id="stat-answered">0</strong></article><article class="metric"><span>Правильных</span><strong id="stat-correct">0</strong></article><article class="metric"><span>Точность</span><strong id="stat-accuracy">0%</strong></article><article class="metric"><span>Сегодня</span><strong id="stat-today">0/20</strong></article></div>
-<article class="panel streak-panel"><div><span class="flame">🔥</span><strong id="streak-count">0 дней подряд</strong></div><p class="muted small">Серия растёт за завершённую ежедневную тренировку из 20 вопросов.</p></article>
-<article class="panel"><h3>Медали</h3><div id="achievements" class="achievement-grid"></div></article><article class="panel"><h3>Последние учебные дни</h3><div id="day-history" class="history-list"></div></article><article class="panel"><h3>Мои темы</h3><div id="topic-list" class="topic-list"></div></article>
-<div class="panel settings"><h3>Оформление</h3><label for="theme-select">Тема приложения</label><select id="theme-select"><option value="system">Как на iPhone</option><option value="light">Светлая</option><option value="dark">Тёмная</option></select></div>
-</section>
-</main>
-<footer><span>Учись регулярно. Улучшай результат постепенно.</span><span class="footer-sub">Авторские тренировочные задания, не официальные вопросы НМТ.</span><span class="version">NMT English · v1.1.0</span><span class="footer-sub">Обновлено: 5 ноября 2026</span></footer>
-</div>
-<dialog id="installDialog"><div class="dialog-head"><p class="eyebrow">УСТАНОВКА НА IPHONE</p><button class="close-button" id="closeInstall">×</button></div><h2>Добавь NMT English на экран «Домой»</h2><ol><li>Открой сайт в Safari.</li><li>Нажми «Поделиться».</li><li>Выбери «На экран Домой».</li><li>Подтверди добавление.</li></ol><p class="muted small">Для офлайн-режима сначала открой приложение при подключённом интернете.</p><button class="primary-button full" id="doneInstall">Понятно</button></dialog>
-<script src="./questions.js"></script><script src="./app.js"></script>
-</body></html>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true">N</div>
+      <div>
+        <p class="eyebrow">ПРАКТИКА И ОБУЧЕНИЕ</p>
+        <h1>NotiTest</h1>
+      </div>
+      <button class="icon-button" id="installHelp" aria-label="Как установить" title="Как установить">＋</button>
+    </header>
+
+    <nav class="tabs" aria-label="Разделы приложения">
+      <button class="tab active" data-view="today">Сегодня</button>
+      <button class="tab" data-view="stats">Статистика</button>
+      <button class="tab" data-view="topics">Мои темы</button>
+    </nav>
+
+    <main>
+      <section id="view-today" class="view active">
+        <div class="intro">
+          <p class="eyebrow">ТВОЯ ЕЖЕДНЕВНАЯ ПРАКТИКА</p>
+          <h2>Английский<br>без пробелов.</h2>
+          <p class="muted">20 заданий в день. Чёткие объяснения. Прогресс, который можно измерить.</p>
+        </div>
+
+        <article class="progress-card">
+          <div class="row between">
+            <div>
+              <p class="card-label">ЕЖЕДНЕВНАЯ ТРЕНИРОВКА</p>
+              <strong id="progress-count">0 из 20</strong>
+            </div>
+            <span class="date-pill" id="today-date"></span>
+          </div>
+          <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+          <p class="muted small" id="progress-caption">Ответь на 20 вопросов, чтобы завершить тренировку.</p>
+        </article>
+
+        <section id="quiz-area"></section>
+      </section>
+
+      <section id="view-stats" class="view">
+        <div class="section-heading">
+          <p class="eyebrow">ТВОЙ ПРОГРЕСС</p>
+          <h2>Статистика</h2>
+          <p class="muted">Результаты сохраняются на этом устройстве.</p>
+        </div>
+        <div class="metric-grid">
+          <article class="metric"><span>Всего ответов</span><strong id="stat-answered">0</strong></article>
+          <article class="metric"><span>Правильных</span><strong id="stat-correct">0</strong></article>
+          <article class="metric"><span>Точность</span><strong id="stat-accuracy">0%</strong></article>
+          <article class="metric"><span>Сегодня</span><strong id="stat-today">0/20</strong></article>
+        </div>
+        <article class="panel">
+          <h3>Последние учебные дни</h3>
+          <div id="day-history" class="history-list"></div>
+        </article>
+      </section>
+
+      <section id="view-topics" class="view">
+        <div class="section-heading">
+          <p class="eyebrow">ПЛАН ПОВТОРЕНИЯ</p>
+          <h2>Мои темы</h2>
+          <p class="muted">Начинай с тем, в которых пока меньше всего правильных ответов.</p>
+        </div>
+        <div id="topic-list" class="topic-list"></div>
+        <article class="note-panel">
+          <strong>Как читать результаты</strong>
+          <p>Точность считается по всем сохранённым ответам в каждой теме. После новых тренировок показатели обновляются.</p>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <span>Учись регулярно. Улучшай результат постепенно.</span>
+      <span class="footer-sub">Тренируй знания. Отслеживай прогресс. Учись в своём темпе.</span>
+    </footer>
+  </div>
+
+  <dialog id="installDialog">
+    <div class="dialog-head">
+      <p class="eyebrow">УСТАНОВКА НА IPHONE</p>
+      <button class="close-button" id="closeInstall" aria-label="Закрыть">×</button>
+    </div>
+    <h2>Добавь NotiTest на экран «Домой»</h2>
+    <ol>
+      <li>Открой сайт в Safari на iPhone.</li>
+      <li>Нажми кнопку «Поделиться».</li>
+      <li>Выбери «На экран Домой».</li>
+      <li>Подтверди добавление.</li>
+    </ol>
+    <p class="muted small">Для офлайн-режима сначала открой приложение при подключённом интернете и дождись загрузки. Затем оно сможет открываться без сети.</p>
+    <button class="primary-button full" id="doneInstall">Понятно</button>
+  </dialog>
+
+  <script src="./app.js"></script>
+</body>
+</html>

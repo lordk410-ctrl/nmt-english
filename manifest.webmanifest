@@ -1,7 +1,7 @@
 {
-  "name": "NMT English",
-  "short_name": "NMT English",
-  "description": "Ежедневная подготовка к НМТ по английскому языку",
+  "name": "NotiTest",
+  "short_name": "NotiTest",
+  "description": "Практика английского языка и общих тестов.",
   "lang": "ru",
   "start_url": "./",
   "scope": "./",
