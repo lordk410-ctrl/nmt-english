@@ -1,109 +1,49 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#173451">
-  <meta name="description" content="Бесплатная практика английского языка и общих тестов.">
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png">
-  <link rel="stylesheet" href="./styles.css">
-  <title>NotiTest</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f6f8"><meta name="description" content="NotiTest — практика английского языка и общих тестов.">
+<link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icons/icon-192.png"><link rel="stylesheet" href="./styles.css">
+<title>NotiTest</title>
 </head>
-<body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand-mark" aria-hidden="true">N</div>
-      <div>
-        <p class="eyebrow">ПРАКТИКА И ОБУЧЕНИЕ</p>
-        <h1>NotiTest</h1>
-      </div>
-      <button class="icon-button" id="installHelp" aria-label="Как установить" title="Как установить">＋</button>
-    </header>
-
-    <nav class="tabs" aria-label="Разделы приложения">
-      <button class="tab active" data-view="today">Сегодня</button>
-      <button class="tab" data-view="stats">Статистика</button>
-      <button class="tab" data-view="topics">Мои темы</button>
-    </nav>
-
-    <main>
-      <section id="view-today" class="view active">
-        <div class="intro">
-          <p class="eyebrow">ТВОЯ ЕЖЕДНЕВНАЯ ПРАКТИКА</p>
-          <h2>Английский<br>без пробелов.</h2>
-          <p class="muted">20 заданий в день. Чёткие объяснения. Прогресс, который можно измерить.</p>
-        </div>
-
-        <article class="progress-card">
-          <div class="row between">
-            <div>
-              <p class="card-label">ЕЖЕДНЕВНАЯ ТРЕНИРОВКА</p>
-              <strong id="progress-count">0 из 20</strong>
-            </div>
-            <span class="date-pill" id="today-date"></span>
-          </div>
-          <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
-          <p class="muted small" id="progress-caption">Ответь на 20 вопросов, чтобы завершить тренировку.</p>
-        </article>
-
-        <section id="quiz-area"></section>
-      </section>
-
-      <section id="view-stats" class="view">
-        <div class="section-heading">
-          <p class="eyebrow">ТВОЙ ПРОГРЕСС</p>
-          <h2>Статистика</h2>
-          <p class="muted">Результаты сохраняются на этом устройстве.</p>
-        </div>
-        <div class="metric-grid">
-          <article class="metric"><span>Всего ответов</span><strong id="stat-answered">0</strong></article>
-          <article class="metric"><span>Правильных</span><strong id="stat-correct">0</strong></article>
-          <article class="metric"><span>Точность</span><strong id="stat-accuracy">0%</strong></article>
-          <article class="metric"><span>Сегодня</span><strong id="stat-today">0/20</strong></article>
-        </div>
-        <article class="panel">
-          <h3>Последние учебные дни</h3>
-          <div id="day-history" class="history-list"></div>
-        </article>
-      </section>
-
-      <section id="view-topics" class="view">
-        <div class="section-heading">
-          <p class="eyebrow">ПЛАН ПОВТОРЕНИЯ</p>
-          <h2>Мои темы</h2>
-          <p class="muted">Начинай с тем, в которых пока меньше всего правильных ответов.</p>
-        </div>
-        <div id="topic-list" class="topic-list"></div>
-        <article class="note-panel">
-          <strong>Как читать результаты</strong>
-          <p>Точность считается по всем сохранённым ответам в каждой теме. После новых тренировок показатели обновляются.</p>
-        </article>
-      </section>
-    </main>
-
-    <footer>
-      <span>Учись регулярно. Улучшай результат постепенно.</span>
-      <span class="footer-sub">Тренируй знания. Отслеживай прогресс. Учись в своём темпе.</span>
-    </footer>
-  </div>
-
-  <dialog id="installDialog">
-    <div class="dialog-head">
-      <p class="eyebrow">УСТАНОВКА НА IPHONE</p>
-      <button class="close-button" id="closeInstall" aria-label="Закрыть">×</button>
-    </div>
-    <h2>Добавь NotiTest на экран «Домой»</h2>
-    <ol>
-      <li>Открой сайт в Safari на iPhone.</li>
-      <li>Нажми кнопку «Поделиться».</li>
-      <li>Выбери «На экран Домой».</li>
-      <li>Подтверди добавление.</li>
-    </ol>
-    <p class="muted small">Для офлайн-режима сначала открой приложение при подключённом интернете и дождись загрузки. Затем оно сможет открываться без сети.</p>
-    <button class="primary-button full" id="doneInstall">Понятно</button>
-  </dialog>
-
-  <script src="./app.js"></script>
-</body>
-</html>
+<body><div class="app-shell">
+<header class="topbar"><div class="brand-mark">N</div><div class="brand-copy"><p class="eyebrow">ПРАКТИКА И ОБУЧЕНИЕ</p><h1>NotiTest</h1></div><button class="icon-button" id="installHelp" aria-label="Установка">＋</button></header>
+<nav class="tabs" aria-label="Разделы">
+<button class="tab active" data-view="today">Сегодня</button><button class="tab" data-view="library">Все вопросы</button><button class="tab" data-view="practice">Практика</button><button class="tab" data-view="progress">Прогресс</button>
+</nav>
+<main>
+<section id="view-today" class="view active">
+<div class="intro"><p class="eyebrow">ТВОЯ ЕЖЕДНЕВНАЯ ПРАКТИКА</p><h2>Знания растут<br>с каждым днём.</h2><p class="muted">20 заданий в день. Чёткие объяснения. Прогресс, который можно измерить.</p></div>
+<article class="progress-card"><div class="row between"><div><p class="card-label">ЕЖЕДНЕВНАЯ ТРЕНИРОВКА</p><strong id="progressCount">0 из 20</strong></div><span class="date-pill" id="todayDate"></span></div><div class="progress-track"><div id="progressFill" class="progress-fill"></div></div><p class="muted small" id="progressCaption"></p></article>
+<div id="dailyQuiz"></div>
+</section>
+<section id="view-library" class="view">
+<div class="section-heading"><p class="eyebrow">БИБЛИОТЕКА</p><h2>Все вопросы</h2><p class="muted" id="libraryCount">Загрузка базы…</p></div>
+<div class="filters"><input id="searchQuestions" type="search" placeholder="Поиск по вопросу, слову или варианту"><select id="filterTopic"><option value="all">Все темы</option><option>Грамматика</option><option>Лексика</option><option>Use of English</option><option>Чтение</option></select><select id="filterLevel"><option value="all">Любая сложность</option><option value="1">Уровень 1</option><option value="2">Уровень 2</option><option value="3">Уровень 3</option></select></div>
+<div id="libraryList" class="library-list"></div><button id="loadMore" class="secondary-button full">Показать ещё</button>
+</section>
+<section id="view-practice" class="view">
+<div class="section-heading"><p class="eyebrow">БЕЗ ДНЕВНОГО ЛИМИТА</p><h2>Свободная практика</h2><p class="muted" id="practiceSummary"></p></div>
+<div id="practiceHome" class="practice-options">
+<article class="practice-choice"><h3>Все вопросы</h3><p>Большая случайная подборка из всей библиотеки.</p><button id="startAll" class="primary-button">Начать тренировку</button></article>
+<article class="practice-choice"><h3>Мои ошибки</h3><p>Повтори задания, на которые раньше ответил неправильно.</p><button id="startWrong" class="secondary-button">Повторить ошибки</button></article>
+<article class="practice-choice"><h3>Сложные вопросы</h3><p>Вернись к заданиям, которые требуют дополнительной практики.</p><button id="startHard" class="secondary-button">Повторить сложное</button></article>
+<article class="practice-choice"><h3>Выбрать тему</h3><select id="practiceTopic"><option>Грамматика</option><option>Лексика</option><option>Use of English</option><option>Чтение</option></select><button id="startTopic" class="secondary-button">Тренировать тему</button></article>
+<p class="muted small" id="practiceNotice"></p></div>
+<div id="practiceQuiz" hidden></div><button id="backToPractice" class="text-button" hidden>← К выбору тренировки</button>
+</section>
+<section id="view-progress" class="view">
+<div class="section-heading"><p class="eyebrow">ТВОЙ РОСТ</p><h2>Прогресс</h2><p class="muted">Результаты сохраняются на этом устройстве.</p></div>
+<div class="metric-grid"><article class="metric"><span>Всего ответов</span><strong id="statAnswered">0</strong></article><article class="metric"><span>Правильных</span><strong id="statCorrect">0</strong></article><article class="metric"><span>Точность</span><strong id="statAccuracy">0%</strong></article><article class="metric"><span>Сегодня</span><strong id="statToday">0/20</strong></article></div>
+<article class="panel streak-panel"><div><span class="card-label">ТЕКУЩАЯ СЕРИЯ</span><strong><span id="streakValue">0</span> дней подряд</strong></div><span class="streak-icon">✦</span></article>
+<div class="section-heading compact"><h3>Достижения</h3></div><div id="achievementList" class="achievement-list"></div>
+<div class="section-heading compact"><h3>Мои темы</h3></div><div id="topicList" class="topic-list"></div>
+<article class="panel"><h3>Последние учебные дни</h3><div id="dayHistory" class="history-list"></div></article>
+<div class="settings-panel"><label for="themeSelect">Оформление</label><select id="themeSelect"><option value="auto">Автоматически</option><option value="light">Светлая тема</option><option value="dark">Тёмная тема</option></select><p class="muted small">Автоматический режим учитывает настройки устройства.</p></div>
+</section>
+</main>
+<footer><span>Учись регулярно. Улучшай результат постепенно.</span><span class="footer-sub">Тренируй знания. Отслеживай прогресс. Учись в своём темпе.</span></footer>
+</div>
+<dialog id="installDialog"><div class="dialog-head"><p class="eyebrow">УСТАНОВКА НА IPHONE</p><button class="close-button" id="closeInstall">×</button></div><h2>Добавь NotiTest на экран «Домой»</h2><ol><li>Открой сайт в Safari.</li><li>Нажми «Поделиться».</li><li>Выбери «На экран Домой».</li><li>Подтверди добавление.</li></ol><p class="muted small">Открой приложение с интернетом один раз, чтобы загрузить файлы для офлайн-доступа.</p><button class="primary-button full" id="doneInstall">Понятно</button></dialog>
+<script src="./questions.js"></script><script src="./app.js"></script>
+</body></html>

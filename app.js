@@ -1,186 +1,144 @@
-const QUESTIONS = window.NMT_QUESTIONS || [
-  {id:"g01",topic:"Грамматика",level:1,q:"If I ___ more time, I would join the course.",o:["have","had","will have","would have"],a:1,e:"Во втором типе условных предложений после if используется Past Simple; в главной части обычно would + infinitive."},
-  {id:"g02",topic:"Грамматика",level:1,q:"She ___ in Kyiv since 2021.",o:["lives","lived","has lived","is living"],a:2,e:"Since указывает на момент начала, а действие продолжается до настоящего. Нужен Present Perfect."},
-  {id:"g03",topic:"Грамматика",level:1,q:"The documents ___ yesterday.",o:["sent","were sent","have sent","are sending"],a:1,e:"Это Passive Voice в Past Simple: was/were + past participle."},
-  {id:"g04",topic:"Грамматика",level:2,q:"By the time we arrived, the film ___.",o:["starts","has started","had started","was starting"],a:2,e:"Более раннее из двух прошлых действий выражается Past Perfect."},
-  {id:"g05",topic:"Грамматика",level:1,q:"There are ___ students in the library today.",o:["much","a little","many","any"],a:2,e:"Students является исчисляемым существительным во множественном числе, поэтому используется many."},
-  {id:"g06",topic:"Грамматика",level:1,q:"You ___ submit the form by Friday. It is compulsory.",o:["might","must","could","would"],a:1,e:"Must выражает обязательство или необходимость."},
-  {id:"g07",topic:"Грамматика",level:2,q:"I wish I ___ speak French fluently.",o:["can","could","will","am able"],a:1,e:"После I wish для нереального желания о настоящем используется форма Past Simple. Для can это could."},
-  {id:"g08",topic:"Грамматика",level:2,q:"Neither of the answers ___ correct.",o:["are","were","is","be"],a:2,e:"Neither of обычно согласуется с глаголом в единственном числе в формальном английском."},
-  {id:"g09",topic:"Грамматика",level:1,q:"She suggested ___ the museum on Sunday.",o:["visit","to visit","visiting","visited"],a:2,e:"После suggest используется герундий, то есть форма глагола с -ing."},
-  {id:"g10",topic:"Грамматика",level:1,q:"This is the ___ route to the station.",o:["short","shorter","shortest","most short"],a:2,e:"Сравниваются все возможные маршруты, поэтому нужна превосходная степень: the shortest."},
-  {id:"v01",topic:"Лексика",level:1,q:"Choose the closest meaning of 'rapid'.",o:["quiet","quick","careful","weak"],a:1,e:"Rapid означает «быстрый»; ближайший синоним из вариантов это quick."},
-  {id:"v02",topic:"Лексика",level:1,q:"The opposite of 'generous' is ___.",o:["selfish","polite","honest","patient"],a:0,e:"Generous означает «щедрый», а selfish означает «эгоистичный»."},
-  {id:"v03",topic:"Лексика",level:1,q:"Please ___ attention to the instructions.",o:["make","do","pay","take"],a:2,e:"Устойчивое словосочетание: pay attention."},
-  {id:"v04",topic:"Лексика",level:2,q:"The meeting was ___ because the manager was ill.",o:["put off","look after","give up","find out"],a:0,e:"Put off означает «отложить». Остальные фразовые глаголы имеют другие значения."},
-  {id:"v05",topic:"Лексика",level:1,q:"A person who designs buildings is an ___.",o:["accountant","architect","audience","engineer"],a:1,e:"Architect это архитектор, специалист по проектированию зданий."},
-  {id:"v06",topic:"Лексика",level:1,q:"We need to ___ a decision before noon.",o:["do","make","take","have"],a:1,e:"Правильное устойчивое сочетание: make a decision."},
-  {id:"v07",topic:"Лексика",level:1,q:"The instructions were so ___ that everyone understood them.",o:["confusing","clear","ordinary","narrow"],a:1,e:"По смыслу подходит clear: инструкции были понятными."},
-  {id:"v08",topic:"Лексика",level:1,q:"Choose the word closest in meaning to 'purchase'.",o:["borrow","buy","lend","repair"],a:1,e:"Purchase означает «покупать» или «приобретать»."},
-  {id:"u01",topic:"Use of English",level:2,q:"I am looking forward to ___ you again.",o:["see","seeing","saw","seen"],a:1,e:"В конструкции look forward to слово to является предлогом, поэтому далее используется герундий."},
-  {id:"u02",topic:"Use of English",level:2,q:"Despite ___ tired, Mark finished the task.",o:["be","being","was","been"],a:1,e:"После предлога despite используется существительное или герундий."},
-  {id:"u03",topic:"Use of English",level:1,q:"She is responsible ___ organising the event.",o:["for","of","to","with"],a:0,e:"Правильное сочетание: responsible for."},
-  {id:"u04",topic:"Use of English",level:2,q:"Hardly had we arrived ___ it started to rain.",o:["than","when","then","while"],a:1,e:"Устойчивая конструкция: hardly ... when."},
-  {id:"u05",topic:"Use of English",level:1,q:"The book was ___ interesting that I read it twice.",o:["such","so","too","enough"],a:1,e:"Используется конструкция so + adjective + that."},
-  {id:"u06",topic:"Use of English",level:2,q:"He asked me where I ___.",o:["live","lived","do live","am living"],a:1,e:"В косвенном вопросе после глагола в прошедшем времени обычно происходит согласование времён: live становится lived."},
-  {id:"u07",topic:"Use of English",level:3,q:"Not only ___ late, but he also forgot the tickets.",o:["he was","was he","he is","is he"],a:1,e:"После Not only в начале предложения используется инверсия: вспомогательный глагол перед подлежащим."},
-  {id:"u08",topic:"Use of English",level:2,q:"The flight was cancelled ___ the heavy snow.",o:["because","because of","although","despite of"],a:1,e:"Because of употребляется перед существительным или именной группой. Здесь heavy snow это именная группа."},
-  {id:"r01",topic:"Чтение",level:1,q:"Read: 'Mia cycles to work whenever the weather is fine. On rainy days, she takes the bus.' How does Mia travel on rainy days?",o:["By bicycle","By bus","On foot","By train"],a:1,e:"В тексте прямо сказано, что в дождливые дни Mia takes the bus."},
-  {id:"r02",topic:"Чтение",level:1,q:"Read: 'The library closes at 6 p.m. on weekdays, but it stays open until 8 p.m. on Fridays.' When does the library close at 8 p.m.?",o:["On Mondays","On Wednesdays","On Fridays","Every weekday"],a:2,e:"В тексте указано, что до 8 p.m. библиотека работает по пятницам."},
-  {id:"r03",topic:"Чтение",level:2,q:"Read: 'Although the train was delayed, the passengers remained calm.' What does 'although' express?",o:["A contrast","A reason","A result","A purpose"],a:0,e:"Although вводит уступку или контраст: поезд задержался, но пассажиры сохраняли спокойствие."},
-  {id:"r04",topic:"Чтение",level:1,q:"Read: 'Tom borrowed a camera from his cousin and promised to return it on Monday.' Who owns the camera?",o:["Tom","Tom's cousin","The photographer","The shop"],a:1,e:"Tom borrowed the camera from his cousin, значит, камера принадлежит его двоюродному брату или сестре."},
-  {id:"r05",topic:"Чтение",level:1,q:"Read: 'The workshop is free, but participants must register online in advance.' What must participants do?",o:["Pay at the door","Bring a laptop","Register before the event","Arrive one hour early"],a:2,e:"Register online in advance означает, что нужно зарегистрироваться заранее через интернет."}
-];
-
+const QUESTIONS = window.NMT_QUESTIONS || [];
 const STORAGE_KEY = "nmt-english-pwa-v1";
 const TOPICS = ["Грамматика", "Лексика", "Use of English", "Чтение"];
-const $ = (id) => document.getElementById(id);
+const $ = id => document.getElementById(id);
 let state = loadState();
-let selectedAnswer = null;
-let submitted = false;
-
-function todayKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+let selectedAnswer = null, submitted = false, libraryLimit = 40, practiceQueue = [], practiceIndex = 0, practiceMode = "all";
+function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+function hashString(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function shuffle(a,seed){let x=seed||1,r=()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return(x>>>0)/4294967296;};a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function newSession(date){return {date,ids:shuffle(QUESTIONS.map(q=>q.id),hashString(date)).slice(0,20),index:0,answers:[]};}
+function loadState(){
+ try{
+  const s=JSON.parse(localStorage.getItem(STORAGE_KEY))||{};
+  const records=Array.isArray(s.records)?s.records:[];
+  const days=Array.isArray(s.days)?s.days:[];
+  let session=s.session;
+  if(!session||session.date!==todayKey()||!Array.isArray(session.ids)||session.ids.some(id=>!QUESTIONS.some(q=>q.id===id))) session=newSession(todayKey());
+  return {...s,session,records,days,theme:s.theme||"auto",hardIds:Array.isArray(s.hardIds)?s.hardIds:[]};
+ }catch{return {session:newSession(todayKey()),records:[],days:[],theme:"auto",hardIds:[]};}
 }
-function hashString(str) {
-  let h = 2166136261;
-  for (let i=0; i<str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return h >>> 0;
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function applyTheme(){document.documentElement.dataset.theme=state.theme; $("themeSelect").value=state.theme;}
+function switchView(name){
+ document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===name));
+ document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${name}`));
+ if(name==="library")renderLibrary(); if(name==="practice")renderPracticeHome(); if(name==="progress")renderProgress();
 }
-function seededShuffle(items, seed) {
-  let x = seed || 1;
-  const arr = [...items];
-  const rand = () => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return (x >>> 0) / 4294967296; };
-  for (let i=arr.length-1; i>0; i--) {
-    const j = Math.floor(rand()*(i+1));
-    [arr[i],arr[j]] = [arr[j],arr[i]];
-  }
-  return arr;
+function render(){
+ if(state.session.date!==todayKey())state.session=newSession(todayKey());
+ applyTheme();
+ $("totalQuestions").textContent=QUESTIONS.length.toLocaleString("ru-RU");
+ const done=state.session.index;
+ $("progressCount").textContent=`${done} из 20`; $("progressFill").style.width=`${done/20*100}%`;
+ $("progressCaption").textContent=done===20?"Все задания на сегодня выполнены.":`Осталось заданий: ${20-done}.`;
+ $("todayDate").textContent=new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
+ renderDaily();renderStats();renderTopics();renderProgress();
 }
-function newSession(date) {
-  const ids = seededShuffle(QUESTIONS.map(q=>q.id), hashString(date)).slice(0,20);
-  return { date, ids, index:0, answers:[] };
+function renderDaily(){
+ const area=$("dailyQuiz");
+ if(state.session.index>=20){const n=state.session.answers.filter(x=>x.correct).length;area.innerHTML=`<article class="completion-card"><div class="completion-icon">✦</div><h2>Тренировка завершена</h2><div class="score">${n} / 20</div><p class="muted">Правильных ответов сегодня</p><p class="muted small">Результаты сохранены. Новая ежедневная подборка появится завтра.</p></article>`;return;}
+ const q=QUESTIONS.find(x=>x.id===state.session.ids[state.session.index]); renderQuestion(area,q,"daily",state.session.index+1);
 }
-function loadState() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (saved && saved.session && saved.session.date === todayKey()) return saved;
-    return { session:newSession(todayKey()), records:saved?.records || [], days:saved?.days || [] };
-  } catch { return { session:newSession(todayKey()), records:[], days:[] }; }
+function renderQuestion(area,q,mode,number){
+ if(!q){area.innerHTML='<p class="empty-state">Вопрос не найден.</p>';return;}
+ const options=q.o.map((o,i)=>{let c="option";if(selectedAnswer===i)c+=" selected";if(submitted&&i===q.a)c+=" correct";else if(submitted&&i===selectedAnswer)c+=" wrong";return `<button class="${c}" data-opt="${i}" ${submitted?"disabled":""}><span class="option-letter">${"ABCD"[i]}</span><span class="option-text">${esc(o)}</span></button>`;}).join("");
+ const feedback=submitted?`<div class="feedback show"><h3>${selectedAnswer===q.a?"Верно!":"Разберём ответ"}</h3><p class="answer-line">Правильный ответ: ${esc(q.o[q.a])}</p><p>${esc(q.e)}</p></div>`:"";
+ area.innerHTML=`<article class="question-card"><div class="question-meta"><span class="topic-tag">${esc(q.topic)}</span><span class="level-tag">Уровень ${q.level} · ${number||""}</span></div><h2 class="question-text">${esc(q.q).replace(/\n/g,"<br>")}</h2><div class="options">${options}</div>${feedback}${submitted?'<button class="primary-button" id="advance">Следующий вопрос</button>':'<button class="primary-button" id="check" disabled>Проверить ответ</button>'}</article>`;
+ area.querySelectorAll("[data-opt]").forEach(b=>b.addEventListener("click",()=>{if(submitted)return;selectedAnswer=+b.dataset.opt;renderQuestion(area,q,mode,number);$("check").disabled=false;}));
+ if(!submitted)$("check").addEventListener("click",()=>submit(mode,q));
+ else $("advance").addEventListener("click",()=>advance(mode));
 }
-function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-function ensureToday() {
-  if (state.session.date !== todayKey()) {
-    state.session = newSession(todayKey());
-    saveState();
-  }
+function submit(mode,q){
+ if(selectedAnswer===null||submitted)return;submitted=true;
+ const rec={questionId:q.id,topic:q.topic,selected:selectedAnswer,correct:selectedAnswer===q.a,date:todayKey(),mode};
+ state.records.push(rec);
+ if(mode==="daily"){
+  state.session.answers.push(rec);
+  const d=state.days.find(x=>x.date===todayKey()),a=state.session.answers;
+  const day={date:todayKey(),answered:a.length,correct:a.filter(x=>x.correct).length,completed:a.length>=20};
+  if(d)Object.assign(d,day);else state.days.push(day);
+ }else if(mode==="practice"){
+  if(!rec.correct&&!state.hardIds.includes(q.id))state.hardIds.push(q.id);
+  if(rec.correct)state.hardIds=state.hardIds.filter(id=>id!==q.id);
+ }
+ save();renderStats();renderTopics();renderProgress();
+ const area=mode==="daily"?$("dailyQuiz"):$("practiceQuiz");
+ renderQuestion(area,q,mode,mode==="daily"?state.session.index+1:practiceIndex+1);
 }
-function currentQuestion() {
-  const id = state.session.ids[state.session.index];
-  return QUESTIONS.find(q=>q.id===id);
+function advance(mode){
+ selectedAnswer=null;submitted=false;
+ if(mode==="daily"){state.session.index++;save();render();return;}
+ practiceIndex++;
+ if(practiceIndex>=practiceQueue.length){$("practiceQuiz").innerHTML=`<article class="completion-card"><div class="completion-icon">✦</div><h2>Практика завершена</h2><p class="muted">Ты ответил(а) на ${practiceQueue.length} вопросов.</p><button class="primary-button" id="backPractice">К выбору тренировки</button></article>`;$("backPractice").onclick=renderPracticeHome;return;}
+ renderQuestion($("practiceQuiz"),practiceQueue[practiceIndex],"practice",practiceIndex+1);
 }
-function render() {
-  ensureToday();
-  $("today-date").textContent = new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
-  const done = state.session.index;
-  $("progress-count").textContent = `${done} из 20`;
-  $("progress-fill").style.width = `${done/20*100}%`;
-  $("progress-caption").textContent = done===20 ? "Все задания на сегодня выполнены." : `Осталось заданий: ${20-done}.`;
-  renderQuiz();
-  renderStats();
-  renderTopics();
+function renderStats(){
+ const r=state.records,c=r.filter(x=>x.correct).length;
+ $("statAnswered").textContent=r.length;$("statCorrect").textContent=c;$("statAccuracy").textContent=r.length?`${Math.round(c/r.length*100)}%`:"0%";
+ $("statToday").textContent=`${state.session.answers.length}/20`;
+ const days=[...state.days].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,14);
+ $("dayHistory").innerHTML=days.length?days.map(d=>`<div class="history-row"><div class="history-top"><span>${formatDate(d.date)}</span><strong>${d.correct}/${d.answered}</strong></div><div class="mini-track"><div class="mini-fill" style="width:${d.answered?d.correct/d.answered*100:0}%"></div></div></div>`).join(""):'<p class="empty-state">Статистика появится после первых ответов.</p>';
 }
-function renderQuiz() {
-  const area = $("quiz-area");
-  if (state.session.index >= 20) {
-    const correct = state.session.answers.filter(a=>a.correct).length;
-    area.innerHTML = `<article class="completion-card"><div class="completion-icon">✦</div><h2>Тренировка завершена</h2><div class="score">${correct} / 20</div><p class="muted">Правильных ответов сегодня</p><p class="muted small">Новая подборка появится завтра. Результаты сохранены на этом устройстве.</p></article>`;
-    return;
-  }
-  const q = currentQuestion();
-  if (!q) { area.innerHTML = '<p class="empty-state">Не удалось загрузить вопрос.</p>'; return; }
-  const answer = state.session.answers.find(a=>a.questionId===q.id);
-  const options = q.o.map((option,i)=>{
-    let cls = "option";
-    if (selectedAnswer===i) cls += " selected";
-    if (submitted && i===q.a) cls += " correct";
-    else if (submitted && i===selectedAnswer) cls += " wrong";
-    return `<button class="${cls}" data-option="${i}" ${submitted?"disabled":""}><span class="option-letter">${"ABCD"[i]}</span><span class="option-text">${escapeHTML(option)}</span></button>`;
-  }).join("");
-  const feedback = submitted ? `<div class="feedback show"><h3>${selectedAnswer===q.a?"Верно!":"Разберём ответ"}</h3><p class="answer-line">Правильный ответ: ${escapeHTML(q.o[q.a])}</p><p>${selectedAnswer===q.a ? q.e : `Твой вариант «${escapeHTML(q.o[selectedAnswer])}» не подходит. ${q.e}`}</p></div>` : "";
-  area.innerHTML = `<article class="question-card">
-    <div class="question-meta"><span class="topic-tag">${q.topic}</span><span class="level-tag">Уровень ${q.level} · Вопрос ${state.session.index+1}/20</span></div>
-    <h2 class="question-text">${escapeHTML(q.q)}</h2>
-    <div class="options">${options}</div>
-    ${feedback}
-    ${submitted ? '<button class="primary-button" id="nextQuestion">Следующее задание</button>' : '<button class="primary-button" id="checkAnswer" disabled>Проверить ответ</button>'}
-  </article>`;
-  area.querySelectorAll("[data-option]").forEach(btn=>btn.addEventListener("click",()=>{
-    if (submitted) return;
-    selectedAnswer = Number(btn.dataset.option);
-    renderQuiz();
-    $("checkAnswer").disabled = false;
-  }));
-  if (!submitted) $("checkAnswer").addEventListener("click", submitAnswer);
-  else $("nextQuestion").addEventListener("click", nextQuestion);
+function renderTopics(){
+ const html=TOPICS.map(t=>{const a=state.records.filter(r=>r.topic===t),c=a.filter(x=>x.correct).length,p=a.length?Math.round(c/a.length*100):0;return `<article class="topic-item"><div class="topic-top"><span>${t}</span><span class="topic-percent">${a.length?p+"%":"—"}</span></div><div class="mini-track" style="margin-top:10px"><div class="mini-fill" style="width:${p}%"></div></div><p>Ответов: ${a.length} · ${!a.length?"пока нет данных":p<60?"стоит повторить":p<80?"есть куда расти":"хороший результат"}</p></article>`;}).join("");
+ $("topicList").innerHTML=html;
 }
-function submitAnswer() {
-  if (selectedAnswer===null || submitted) return;
-  submitted = true;
-  const q = currentQuestion();
-  const record = { questionId:q.id, topic:q.topic, selected:selectedAnswer, correct:selectedAnswer===q.a, date:todayKey() };
-  state.session.answers.push(record);
-  state.records.push(record);
-  const existing = state.days.find(d=>d.date===todayKey());
-  const todayAnswers = state.session.answers;
-  const day = { date:todayKey(), answered:todayAnswers.length, correct:todayAnswers.filter(a=>a.correct).length };
-  if (existing) Object.assign(existing,day); else state.days.push(day);
-  saveState();
-  render();
+function renderLibrary(){
+ const query=$("searchQuestions").value.trim().toLowerCase(),topic=$("filterTopic").value,level=$("filterLevel").value;
+ const list=QUESTIONS.filter(q=>(topic==="all"||q.topic===topic)&&(level==="all"||String(q.level)===level)&&(!query||`${q.q} ${q.o.join(" ")} ${q.e}`.toLowerCase().includes(query)));
+ $("libraryCount").textContent=`Показано ${Math.min(libraryLimit,list.length)} из ${list.length} вопросов · всего ${QUESTIONS.length}`;
+ $("libraryList").innerHTML=list.slice(0,libraryLimit).map(q=>`<article class="library-card"><div class="question-meta"><span class="topic-tag">${esc(q.topic)}</span><span class="level-tag">Уровень ${q.level}</span></div><p>${esc(q.q).replace(/\n/g,"<br>")}</p><button class="secondary-button" data-train="${q.id}">Тренировать этот вопрос</button></article>`).join("")||'<p class="empty-state">По этому запросу ничего не найдено.</p>';
+ $("loadMore").hidden=list.length<=libraryLimit;
+ $("libraryList").querySelectorAll("[data-train]").forEach(b=>b.onclick=()=>startPractice([b.dataset.train]));
 }
-function nextQuestion() {
-  state.session.index++;
-  selectedAnswer = null;
-  submitted = false;
-  saveState();
-  render();
+function startPractice(ids){
+ practiceQueue=ids.map(id=>QUESTIONS.find(q=>q.id===id)).filter(Boolean);practiceIndex=0;selectedAnswer=null;submitted=false;
+ switchView("practice");$("practiceHome").hidden=true;$("practiceQuiz").hidden=false;$("backToPractice").hidden=false;
+ renderQuestion($("practiceQuiz"),practiceQueue[0],"practice",1);
 }
-function renderStats() {
-  const records = state.records;
-  const correct = records.filter(r=>r.correct).length;
-  $("stat-answered").textContent = records.length;
-  $("stat-correct").textContent = correct;
-  $("stat-accuracy").textContent = records.length ? `${Math.round(correct/records.length*100)}%` : "0%";
-  $("stat-today").textContent = `${state.session.answers.length}/20`;
-  const days = [...state.days].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,14);
-  $("day-history").innerHTML = days.length ? days.map(d=>`<div class="history-row"><div class="history-top"><span>${formatDate(d.date)}</span><strong>${d.correct}/${d.answered}</strong></div><div class="mini-track"><div class="mini-fill" style="width:${d.answered?d.correct/d.answered*100:0}%"></div></div></div>`).join("") : '<p class="empty-state">Статистика появится после первых ответов.</p>';
+function renderPracticeHome(){
+ $("practiceHome").hidden=false;$("practiceQuiz").hidden=true;
+ $("practiceSummary").textContent=`В базе ${QUESTIONS.length} вопросов. Свободная практика не расходует ежедневные 20 заданий.`;
 }
-function renderTopics() {
-  const data = TOPICS.map(topic=>{
-    const list = state.records.filter(r=>r.topic===topic);
-    const correct = list.filter(r=>r.correct).length;
-    return {topic, attempts:list.length, accuracy:list.length?Math.round(correct/list.length*100):null};
-  }).filter(x=>x.attempts).sort((a,b)=>a.accuracy-b.accuracy);
-  $("topic-list").innerHTML = data.length ? data.map(x=>`<article class="topic-item"><div class="topic-top"><span>${x.topic}</span><span class="topic-percent">${x.accuracy}%</span></div><div class="mini-track" style="margin-top:10px"><div class="mini-fill" style="width:${x.accuracy}%"></div></div><p>Ответов: ${x.attempts} · ${x.accuracy<60?"стоит повторить":x.accuracy<80?"есть куда расти":"хороший результат"}</p></article>`).join("") : '<p class="empty-state">Пока недостаточно данных. Пройди несколько вопросов, и здесь появится анализ слабых тем.</p>';
+function beginPractice(kind){
+ let qs=QUESTIONS;
+ if(kind==="wrong"){const ids=new Set(state.records.filter(x=>!x.correct).map(x=>x.questionId));qs=QUESTIONS.filter(q=>ids.has(q.id));}
+ if(kind==="hard")qs=QUESTIONS.filter(q=>state.hardIds.includes(q.id));
+ if(kind==="topic"){const t=$("practiceTopic").value;qs=QUESTIONS.filter(q=>q.topic===t);}
+ if(!qs.length){$("practiceNotice").textContent="Пока нет вопросов для этого режима. Ответь на задания или выбери другую тему.";return;}
+ const n=kind==="all"?qs.length:Math.min(qs.length,100);
+ startPractice(shuffle(qs.map(q=>q.id),Date.now()).slice(0,n));
 }
-function formatDate(key) {
-  const [y,m,d]=key.split("-").map(Number);
-  return new Date(y,m-1,d).toLocaleDateString("ru-RU",{day:"numeric",month:"short",year:"numeric"});
+function streak(){
+ const completed=new Set(state.days.filter(d=>d.completed).map(d=>d.date));let n=0,d=new Date();
+ if(!completed.has(todayKey()))d.setDate(d.getDate()-1);
+ while(completed.has(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`)){n++;d.setDate(d.getDate()-1);}
+ return n;
 }
-function escapeHTML(value) {
-  return String(value).replace(/[&<>"']/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+function renderProgress(){
+ const total=state.records.length,s=streak(),topicsDone=TOPICS.filter(t=>{const a=state.records.filter(r=>r.topic===t);return a.length>=10&&a.filter(r=>r.correct).length/a.length>=.8;}).length;
+ $("streakValue").textContent=s;$("achievementList").innerHTML=[
+ ["Первые шаги",total>=1,"Ответь на первый вопрос"],
+ ["Разминка",total>=100,"100 ответов"],
+ ["Сотня знаний",total>=500,"500 ответов"],
+ ["Марафонец",total>=1000,"1000 ответов"],
+ ["Три дня подряд",s>=3,"Заверши ежедневную тренировку 3 дня подряд"],
+ ["Неделя практики",s>=7,"7 дней подряд"],
+ ["Две недели",s>=14,"14 дней подряд"],
+ ["Месяц дисциплины",s>=30,"30 дней подряд"],
+ ["Мастер тем",topicsDone>=4,"Освой все четыре темы: минимум 10 ответов и 80% точности"]
+ ].map(x=>`<article class="achievement ${x[1]?"earned":""}"><span class="medal">${x[1]?"★":"☆"}</span><div><strong>${x[0]}</strong><p>${x[2]}</p></div><span class="status">${x[1]?"Получено":"В процессе"}</span></article>`).join("");
 }
-document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
-  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===tab));
-  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${tab.dataset.view}`));
-}));
-const installDialog = $("installDialog");
-$("installHelp").addEventListener("click",()=>installDialog.showModal());
-$("closeInstall").addEventListener("click",()=>installDialog.close());
-$("doneInstall").addEventListener("click",()=>installDialog.close());
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(console.error));
-}
-render();
+function formatDate(k){const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("ru-RU",{day:"numeric",month:"short",year:"numeric"});}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>switchView(t.dataset.view)));
+$("searchQuestions").addEventListener("input",()=>{libraryLimit=40;renderLibrary();});
+$("filterTopic").addEventListener("change",renderLibrary);$("filterLevel").addEventListener("change",renderLibrary);
+$("loadMore").onclick=()=>{libraryLimit+=40;renderLibrary();};
+$("themeSelect").addEventListener("change",()=>{state.theme=$("themeSelect").value;save();applyTheme();});
+$("startAll").onclick=()=>beginPractice("all");$("startWrong").onclick=()=>beginPractice("wrong");$("startHard").onclick=()=>beginPractice("hard");$("startTopic").onclick=()=>beginPractice("topic");
+$("backToPractice").onclick=()=>{selectedAnswer=null;submitted=false;renderPracticeHome();};
+$("installHelp").onclick=()=>$("installDialog").showModal();$("closeInstall").onclick=()=>$("installDialog").close();$("doneInstall").onclick=()=>$("installDialog").close();
+if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(console.error));
+render();renderLibrary();renderPracticeHome();
