@@ -1,6 +1,42 @@
 "use strict";
-const CACHE_NAME="nmt-english-v1.2.0";
-const FILES=["./","./index.html","./styles.css","./app.js","./questions.js","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png"];
-self.addEventListener("install",e=>e.waitUntil((async()=>{const c=await caches.open(CACHE_NAME);await Promise.all(FILES.map(async f=>{try{const r=await fetch(f,{cache:"reload"});if(r.ok)await c.put(f,r);}catch(_){}}));await self.skipWaiting();})()));
-self.addEventListener("activate",e=>e.waitUntil((async()=>{const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith("nmt-english-")&&k!==CACHE_NAME).map(k=>caches.delete(k)));await self.clients.claim();})()));
-self.addEventListener("fetch",e=>{const q=e.request;if(q.method!=="GET"||new URL(q.url).origin!==self.location.origin)return;e.respondWith((async()=>{const c=await caches.open(CACHE_NAME);try{const r=await fetch(q);if(r.ok){const u=new URL(q.url);u.search="";await c.put(u.pathname==="/"?"./":u.pathname,r.clone());}return r;}catch(_){const u=new URL(q.url),k=u.pathname.endsWith("/")?"./":u.pathname;const hit=await c.match(k)||await c.match(q);if(hit)return hit;if(q.mode==="navigate")return(await c.match("./index.html"))||Response.error();return Response.error();}})());});
+const CACHE_NAME="nmt-english-v1.5.0";
+const APP_FILES=["./","./index.html","./styles.css","./app.js","./questions.js","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png"];
+self.addEventListener("install",event=>{
+ event.waitUntil((async()=>{
+  const cache=await caches.open(CACHE_NAME);
+  await Promise.all(APP_FILES.map(async path=>{
+   try{const response=await fetch(path,{cache:"reload"});if(response.ok)await cache.put(path,response);}
+   catch(error){console.warn("Не удалось обновить файл:",path,error);}
+  }));
+  await self.skipWaiting();
+ })());
+});
+self.addEventListener("activate",event=>{
+ event.waitUntil((async()=>{
+  const keys=await caches.keys();
+  await Promise.all(keys.filter(key=>key.startsWith("nmt-english-")&&key!==CACHE_NAME).map(key=>caches.delete(key)));
+  await self.clients.claim();
+ })());
+});
+self.addEventListener("fetch",event=>{
+ const request=event.request;
+ if(request.method!=="GET"||new URL(request.url).origin!==self.location.origin)return;
+ event.respondWith((async()=>{
+  const cache=await caches.open(CACHE_NAME);
+  try{
+   const response=await fetch(request);
+   if(response&&response.ok){
+    const url=new URL(request.url);url.search="";
+    const key=url.pathname==="/"?"./":url.pathname;
+    await cache.put(key,response.clone());
+   }
+   return response;
+  }catch(error){
+   const url=new URL(request.url);const key=url.pathname.endsWith("/")?"./":url.pathname;
+   const cached=await cache.match(key)||await cache.match(request);
+   if(cached)return cached;
+   if(request.mode==="navigate")return (await cache.match("./index.html"))||Response.error();
+   return Response.error();
+  }
+ })());
+});

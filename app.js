@@ -1,14 +1,14 @@
 (() => {
 "use strict";
-const VERSION="1.2.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v2";
-const TOPICS=[...new Set(QUESTIONS.map(q=>q.topic).filter(Boolean))], $=id=>document.getElementById(id);
+const VERSION="1.5.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
+const TOPICS=["Грамматика","Лексика","Use of English","Чтение"], $=id=>document.getElementById(id);
 const freshSession=date=>({date,ids:shuffle(QUESTIONS.map(q=>q.id),hash(date)).slice(0,20),index:0,answers:[]});
 function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
 function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 function shuffle(items,seed){let x=seed||1,a=[...items];const rand=()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return(x>>>0)/4294967296;};for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function load(){try{const raw=localStorage.getItem(STORAGE_KEY)||localStorage.getItem("nmt-english-pwa-v1"),s=raw?JSON.parse(raw):null;if(s&&s.session){s.records=Array.isArray(s.records)?s.records:[];s.days=Array.isArray(s.days)?s.days:[];if(s.session.date!==today())s.session=freshSession(today());else{s.session.ids=(Array.isArray(s.session.ids)?s.session.ids:[]).filter(id=>QUESTIONS.some(q=>q.id===id));if(!s.session.ids.length)s.session=freshSession(today());s.session.index=Math.min(20,Math.max(0,Number(s.session.index)||0));s.session.answers=Array.isArray(s.session.answers)?s.session.answers:[];}return s;}}catch(e){console.warn("Не удалось прочитать прогресс",e);}return{session:freshSession(today()),records:[],days:[]};}
+function load(){try{const s=JSON.parse(localStorage.getItem(STORAGE_KEY));if(s&&s.session){if(s.session.date!==today())s.session=freshSession(today());s.records=s.records||[];s.days=s.days||[];return s;}}catch(e){}return{session:freshSession(today()),records:[],days:[]};}
 let state=load(), selected=null, submitted=false, practice={ids:[],index:0,selected:null,submitted:false};
-function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){console.warn("Не удалось сохранить прогресс",e);}}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function question(id){return QUESTIONS.find(q=>q.id===id);}
 function activate(view){document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===view));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));if(view==="bank")renderBank();if(view==="practice")renderPractice();}
@@ -23,7 +23,7 @@ $("answerAction").addEventListener("click",()=>{if(mode==="daily"){if(!submitted
 }
 function submitDaily(){if(selected===null)return;submitted=true;const q=question(state.session.ids[state.session.index]);const r={questionId:q.id,topic:q.topic,selected,correct:selected===q.a,date:today(),mode:"daily"};state.session.answers.push(r);state.records.push(r);const d=state.days.find(x=>x.date===today());const summary={date:today(),answered:state.session.answers.length,correct:state.session.answers.filter(x=>x.correct).length};if(d)Object.assign(d,summary);else state.days.push(summary);save();render();}
 function nextDaily(){state.session.index++;selected=null;submitted=false;save();render();}
-function fillTopicSelect(id){const el=$(id);if(!el)return;const current=el.value;el.innerHTML='<option value="">Все темы</option>'+TOPICS.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join("");if(TOPICS.includes(current))el.value=current;}
+function fillTopicSelect(id){const el=$(id);el.innerHTML='<option value="">Все темы</option>'+TOPICS.map(t=>`<option>${esc(t)}</option>`).join("");}
 function renderBank(){const search=($("bank-search").value||"").toLowerCase().trim(),topic=$("bank-topic").value,level=$("bank-level").value;const found=QUESTIONS.filter(q=>(!topic||q.topic===topic)&&(!level||String(q.level)===level)&&(!search||[q.q,...q.o,q.topic].join(" ").toLowerCase().includes(search)));$("bank-count").textContent=`Показано ${found.length} из ${QUESTIONS.length} вопросов`; $("bank-list").innerHTML=found.map(q=>`<article class="bank-item"><div class="question-meta"><span class="topic-tag">${esc(q.topic)}</span><span class="level-tag">Уровень ${q.level}</span></div><p>${esc(q.q)}</p><button class="secondary-button" data-practice-id="${esc(q.id)}">Тренировать этот вопрос</button></article>`).join("")||'<p class="empty-state">Ничего не найдено. Измени поиск или фильтры.</p>'; $("bank-list").querySelectorAll("[data-practice-id]").forEach(b=>b.addEventListener("click",()=>{practice.ids=[b.dataset.practiceId];practice.index=0;practice.selected=null;practice.submitted=false;activate("practice");renderPractice();}));}
 function startPractice(){const topic=$("practice-topic").value,mode=$("practice-mode").value;let pool=QUESTIONS.filter(q=>!topic||q.topic===topic);if(mode==="wrong"){const wrong=new Set(state.records.filter(r=>!r.correct).map(r=>r.questionId));pool=pool.filter(q=>wrong.has(q.id));}if(mode==="hard")pool=pool.filter(q=>q.level>=3);practice.ids=shuffle(pool.map(q=>q.id),Date.now()).slice(0,30);practice.index=0;practice.selected=null;practice.submitted=false;renderPractice();}
 function renderPractice(){const area=$("practice-area");if(!practice.ids.length){area.innerHTML='<p class="empty-state">Выбери тему и режим, затем нажми «Начать практику».</p><button class="primary-button" id="startPractice">Начать практику</button>';$("startPractice").addEventListener("click",startPractice);return;}if(practice.index>=practice.ids.length){area.innerHTML=`<article class="completion-card"><div class="completion-icon">✓</div><h2>Раунд завершён</h2><p class="muted">Ответы сохранены в общей статистике.</p><button class="primary-button" id="againPractice">Ещё раунд</button></article>`;$("againPractice").addEventListener("click",startPractice);return;}renderQuestion(area,question(practice.ids[practice.index]),practice.index+1,practice.ids.length,practice.selected,practice.submitted,"practice");}
@@ -38,12 +38,22 @@ const days=[...state.days].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,14)
 const topics=TOPICS.map(t=>{const a=rs.filter(r=>r.topic===t),c=a.filter(r=>r.correct).length;return{t,a:a.length,p:a.length?Math.round(c/a.length*100):0};});$("topic-list").innerHTML=topics.map(x=>`<div class="topic-item"><div class="topic-top"><span>${esc(x.t)}</span><span>${x.a?x.p+"%":"—"}</span></div><div class="mini-track" style="margin-top:9px"><div class="mini-fill" style="width:${x.p}%"></div></div><p>Ответов: ${x.a}</p></div>`).join("");}
 function plural(n,forms){const x=n%100,y=n%10;return forms[x>10&&x<20?2:y>1&&y<5?1:y===1?0:2];}
 function formatDate(k){const[y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("ru-RU",{day:"numeric",month:"short",year:"numeric"});}
-function setTheme(v){const theme=["system","light","dark"].includes(v)?v:"system";document.documentElement.dataset.theme=theme;document.documentElement.style.colorScheme=theme==="system"?"light dark":theme;try{localStorage.setItem("nmt-theme",theme);}catch(e){}const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=theme==="dark"?"#101b28":theme==="light"?"#f2f5f7":"#173451";}
+function setTheme(v){
+ const theme=["system","light","dark"].includes(v)?v:"system";
+ document.documentElement.dataset.theme=theme;
+ document.documentElement.style.colorScheme=theme==="system"?"light dark":theme;
+ try{localStorage.setItem("nmt-theme",theme);}catch(e){console.warn("Не удалось сохранить тему:",e);}
+ const meta=document.querySelector('meta[name="theme-color"]');
+ if(meta)meta.setAttribute("content",theme==="dark"?"#101b28":theme==="light"?"#f2f5f7":"#173451");
+}
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>activate(t.dataset.view)));
 fillTopicSelect("bank-topic");fillTopicSelect("practice-topic");
 ["bank-search","bank-topic","bank-level"].forEach(id=>$(id).addEventListener(id==="bank-search"?"input":"change",renderBank));
-let savedTheme="system";try{savedTheme=localStorage.getItem("nmt-theme")||"system";}catch(e){}$("theme-select").value=["system","light","dark"].includes(savedTheme)?savedTheme:"system";setTheme($("theme-select").value);$("theme-select").addEventListener("change",e=>setTheme(e.target.value));
+let savedTheme="system";try{savedTheme=localStorage.getItem("nmt-theme")||"system";}catch(e){}
+$("theme-select").value=["system","light","dark"].includes(savedTheme)?savedTheme:"system";
+setTheme($("theme-select").value);$("theme-select").addEventListener("change",e=>setTheme(e.target.value));
 const dlg=$("installDialog");$("installHelp").addEventListener("click",()=>dlg.showModal());$("closeInstall").addEventListener("click",()=>dlg.close());$("doneInstall").addEventListener("click",()=>dlg.close());
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(console.error));
-if(!QUESTIONS.length){console.error("Банк вопросов не загрузился или пуст.");const count=$("bank-count");if(count)count.textContent="Не удалось загрузить базу вопросов. Обнови страницу при подключённом интернете.";}render();
+if(!QUESTIONS.length){console.error("Банк вопросов не загрузился или пуст.");const count=$("bank-count");if(count)count.textContent="Не удалось загрузить базу вопросов. Обнови страницу при подключённом интернете.";}
+render();
 })();
