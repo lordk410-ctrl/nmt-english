@@ -1,5 +1,5 @@
 "use strict";
-const CACHE_NAME="nmt-english-v1.5.0";
+const CACHE_NAME="nmt-english-v1.6.0";
 const APP_FILES=["./","./index.html","./styles.css","./app.js","./questions.js","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png"];
 self.addEventListener("install",event=>{
  event.waitUntil((async()=>{

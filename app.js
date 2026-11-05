@@ -1,6 +1,6 @@
 (() => {
 "use strict";
-const VERSION="1.5.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
+const VERSION="1.6.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
 const TOPICS=["Грамматика","Лексика","Use of English","Чтение"], $=id=>document.getElementById(id);
 const freshSession=date=>({date,ids:shuffle(QUESTIONS.map(q=>q.id),hash(date)).slice(0,20),index:0,answers:[]});
 function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
@@ -11,8 +11,26 @@ let state=load(), selected=null, submitted=false, practice={ids:[],index:0,selec
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function question(id){return QUESTIONS.find(q=>q.id===id);}
-function activate(view){document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===view));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));if(view==="bank")renderBank();if(view==="practice")renderPractice();}
-function render(){const done=state.session.index;$("today-date").textContent=new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"short"});$("progress-count").textContent=`${done} из 20`;$("progress-fill").style.width=`${done/20*100}%`;$("progress-caption").textContent=done===20?"Все задания на сегодня выполнены.":`Осталось заданий: ${20-done}.`;renderDaily();renderStats();}
+function activate(view){document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===view));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));if(view==="bank")renderBank();if(view==="practice")renderPractice();if(view==="home")renderHome();window.scrollTo({top:0,behavior:"smooth"});}
+const FACTS=[
+"В английском алфавите 26 букв, но примерно 44 звука. Поэтому одна и та же буква может звучать по-разному.",
+"Слово «queue» произносится почти как одна буква Q. Остальные буквы словно стоят в очереди.",
+"«I am» — самое короткое полное предложение в английском языке: в нём есть подлежащее и сказуемое.",
+"В слове «rhythm» нет ни одной из пяти обычных гласных букв A, E, I, O, U.",
+"Английское «goodbye» исторически произошло от выражения «God be with ye».",
+"Слово «bookkeeper» примечательно тем, что в нём подряд идут три пары одинаковых букв: oo, kk и ee.",
+"«Dreamt» считается одним из самых известных английских слов, оканчивающихся на сочетание букв -mt.",
+"В английском слово «set» имеет очень много значений. Их число зависит от того, какие формы и употребления считать отдельными.",
+"«Uncopyrightable» можно написать без повторения букв. Это пример из английской лексики, где каждая буква встречается один раз.",
+"В английском нет единственного правила, по которому читаются все сочетания букв. Поэтому произношение полезно учить вместе со словами.",
+"«Alphabet» пришло через латинский из греческого: от названий первых двух букв, alpha и beta.",
+"Точка над строчной буквой i или j называется по-английски «tittle»."
+];
+let currentFact=0;
+function showFact(index){currentFact=(index+FACTS.length)%FACTS.length;const text=$("fact-text"),counter=$("fact-counter"),dots=$("fact-dots");if(!text||!counter||!dots)return;text.textContent=FACTS[currentFact];counter.textContent=`${currentFact+1} / ${FACTS.length}`;dots.innerHTML=FACTS.map((_,i)=>`<button class="fact-dot ${i===currentFact?"active":""}" data-fact="${i}" aria-label="Факт ${i+1}" aria-current="${i===currentFact?"true":"false"}"></button>`).join("");dots.querySelectorAll("[data-fact]").forEach(b=>b.addEventListener("click",()=>showFact(Number(b.dataset.fact))));}
+function renderHome(){const done=state.session.index>=20;const count=state.session.index;const days=streak();$("home-streak").textContent=`${days} ${plural(days,["день","дня","дней"])}`;$("home-daily-status").textContent=done?"Выполнено ✓":"Не выполнено";$("home-daily-detail").textContent=done?"Все 20 заданий завершены":`${count} из 20 заданий выполнено`;}
+
+function render(){const done=state.session.index;renderHome();$("today-date").textContent=new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"short"});$("progress-count").textContent=`${done} из 20`;$("progress-fill").style.width=`${done/20*100}%`;$("progress-caption").textContent=done===20?"Все задания на сегодня выполнены.":`Осталось заданий: ${20-done}.`;renderDaily();renderStats();}
 function renderDaily(){const area=$("quiz-area");if(state.session.index>=20){area.innerHTML=`<article class="completion-card"><div class="completion-icon">✦</div><h2>Тренировка завершена</h2><div class="score">${state.session.answers.filter(a=>a.correct).length} / 20</div><p class="muted">Правильных ответов сегодня</p><p class="muted small">Новая подборка появится завтра. Свободная практика доступна без ограничений.</p></article>`;return;}renderQuestion(area,question(state.session.ids[state.session.index]),state.session.index+1,20,selected,submitted,"daily");}
 function renderQuestion(area,q,n,total,chosen,done,mode){if(!q){area.innerHTML='<p class="empty-state">Вопросы не найдены. Проверь, загружен ли questions.js.</p>';return;}
 const opts=q.o.map((v,i)=>{let c="option";if(chosen===i)c+=" selected";if(done&&i===q.a)c+=" correct";else if(done&&i===chosen)c+=" wrong";return `<button class="${c}" data-choice="${i}" ${done?"disabled":""}><span class="option-letter">${"ABCD"[i]}</span><span class="option-text">${esc(v)}</span></button>`;}).join("");
@@ -46,7 +64,7 @@ function setTheme(v){
  const meta=document.querySelector('meta[name="theme-color"]');
  if(meta)meta.setAttribute("content",theme==="dark"?"#101b28":theme==="light"?"#f2f5f7":"#173451");
 }
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>activate(t.dataset.view)));
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>activate(t.dataset.view)));$("homeButton").addEventListener("click",()=>activate("home"));document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>activate(b.dataset.go)));showFact(0);setInterval(()=>{if(!document.hidden)showFact(currentFact+1);},30000);
 fillTopicSelect("bank-topic");fillTopicSelect("practice-topic");
 ["bank-search","bank-topic","bank-level"].forEach(id=>$(id).addEventListener(id==="bank-search"?"input":"change",renderBank));
 let savedTheme="system";try{savedTheme=localStorage.getItem("nmt-theme")||"system";}catch(e){}
