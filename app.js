@@ -1,6 +1,6 @@
 (() => {
 "use strict";
-const VERSION="1.11.2", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
+const VERSION="1.12.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
 const TOPICS=["Грамматика","Лексика","Use of English","Чтение"], $=id=>document.getElementById(id);
 const freshSession=date=>({date,ids:shuffle(QUESTIONS.map(q=>q.id),hash(date)).slice(0,20),index:0,answers:[]});
 // Учебные сутки идут по московскому времени: с 03:00 до 02:59 следующего дня.
@@ -405,23 +405,47 @@ const topics=TOPICS.map(t=>{const a=rs.filter(r=>r.topic===t),c=a.filter(r=>r.co
 function plural(n,forms){const x=n%100,y=n%10;return forms[x>10&&x<20?2:y>1&&y<5?1:y===1?0:2];}
 function formatDate(k){const[y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("ru-RU",{day:"numeric",month:"short",year:"numeric"});}
 function setTheme(v){
- const theme=["system","light","dark"].includes(v)?v:"system";
+ const theme=v==="light"?"light":"dark";
  document.documentElement.dataset.theme=theme;
- document.documentElement.style.colorScheme=theme==="system"?"light dark":theme;
+ document.documentElement.style.colorScheme=theme;
  try{localStorage.setItem("nmt-theme",theme);}catch(e){console.warn("Не удалось сохранить тему:",e);}
  const meta=document.querySelector('meta[name="theme-color"]');
- if(meta)meta.setAttribute("content",theme==="dark"?"#111827":theme==="light"?"#f5f6ff":"#6d5ce7");
+ if(meta)meta.setAttribute("content",theme==="dark"?"#101b28":"#f2f5f7");
+ updateThemeToggle();
 }
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>activate(t.dataset.view)));$("homeButton").addEventListener("click",()=>activate("home"));document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>activate(b.dataset.go)));showFact(0);
+function updateThemeToggle(){
+ const dark=document.documentElement.dataset.theme!=="light";
+ const label=$("theme-label"),icon=$("theme-icon"),button=$("themeToggle");
+ if(label)label.textContent=dark?"Тёмная тема":"Светлая тема";
+ if(icon)icon.textContent=dark?"🌙":"☀️";
+ if(button)button.setAttribute("aria-label",dark?"Включена тёмная тема. Переключить на светлую":"Включена светлая тема. Переключить на тёмную");
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>activate(t.dataset.view)));
+$("homeButton").addEventListener("click",()=>activate("today"));
+const menuDialog=$("menuDialog"),menuToggle=$("menuToggle");
+function closeMenu(){if(menuDialog.open)menuDialog.close();menuToggle.setAttribute("aria-expanded","false");menuToggle.textContent="☰";}
+function toggleMenu(){if(menuDialog.open){closeMenu();}else{menuDialog.showModal();menuToggle.setAttribute("aria-expanded","true");menuToggle.textContent="×";}}
+menuToggle.addEventListener("click",toggleMenu);
+$("menuClose").addEventListener("click",closeMenu);
+menuDialog.addEventListener("click",e=>{if(e.target===menuDialog)closeMenu();});
+menuDialog.addEventListener("close",()=>{menuToggle.setAttribute("aria-expanded","false");menuToggle.textContent="☰";});
+menuDialog.querySelectorAll("[data-menu-go]").forEach(b=>b.addEventListener("click",()=>{
+ const target=b.dataset.menuGo;closeMenu();
+ if(target==="dictionary"||target==="review"||target==="grammar"||target==="listening"||target==="speaking"){
+  learnSection=target==="dictionary"?"vocab":target;activate("learn");
+ }else if(target==="wrong"){activate("practice");$("practice-mode").value="wrong";practice={ids:[],index:0,selected:null,submitted:false};renderPractice();}
+ else activate(target);
+}));
+$("themeToggle").addEventListener("click",()=>setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark"));
+let savedTheme="dark";try{savedTheme=localStorage.getItem("nmt-theme")==="light"?"light":"dark";}catch(e){}
+setTheme(savedTheme);
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>activate(b.dataset.go)));showFact(0);
 function checkDailyRollover(){const key=today();if(state.session.date!==key){state.session=freshSession(key);selected=null;submitted=false;save();render();return true;}return false;}
 setInterval(checkDailyRollover,15000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkDailyRollover();scheduleFact();}else if("speechSynthesis"in window){window.speechSynthesis.cancel();}});
 fillTopicSelect("bank-topic");fillTopicSelect("practice-topic");
 ["bank-search","bank-topic","bank-level"].forEach(id=>$(id).addEventListener(id==="bank-search"?"input":"change",renderBank));
-let savedTheme="system";try{savedTheme=localStorage.getItem("nmt-theme")||"system";}catch(e){}
-$("theme-select").value=["system","light","dark"].includes(savedTheme)?savedTheme:"system";
-setTheme($("theme-select").value);$("theme-select").addEventListener("change",e=>setTheme(e.target.value));
-const dlg=$("installDialog");$("installHelp").addEventListener("click",()=>dlg.showModal());$("closeInstall").addEventListener("click",()=>dlg.close());$("doneInstall").addEventListener("click",()=>dlg.close());
+const dlg=$("installDialog");$("installHelp").addEventListener("click",()=>{closeMenu();dlg.showModal();});$("closeInstall").addEventListener("click",()=>dlg.close());$("doneInstall").addEventListener("click",()=>dlg.close());
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(console.error));
 if(!QUESTIONS.length){console.error("Банк вопросов не загрузился или пуст.");const count=$("bank-count");if(count)count.textContent="Не удалось загрузить базу вопросов. Обнови страницу при подключённом интернете.";}
 render();

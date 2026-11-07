@@ -4,16 +4,16 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#6d5ce7"><meta name="description" content="NotiTest — развивающие тесты и ежедневная практика для учёбы.">
 <link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icons/icon-192.png">
-<link rel="stylesheet" href="./styles.css?v=1.11.2"><title>NotiTest</title>
+<link rel="stylesheet" href="./styles.css?v=1.12.0"><title>NotiTest</title>
 </head>
 <body>
 <div class="app-shell">
-<header class="topbar"><button class="brand-mark" id="homeButton" aria-label="На главную">N<span class="brand-spark">✦</span></button><div class="brand-copy"><p class="eyebrow">УЧИСЬ · ПРОБУЙ · РАСТИ</p><h1>NotiTest</h1><span class="brand-caption">Тесты для развития каждый день</span></div><button class="icon-button" id="installHelp" aria-label="Как установить">＋</button></header>
-<nav class="tabs" aria-label="Разделы">
-<button class="tab" data-view="today">Сегодня</button><button class="tab" data-view="bank">Все вопросы</button><button class="tab" data-view="practice">Практика</button><button class="tab" data-view="stats">Прогресс</button><button class="tab" data-view="learn">Учиться</button>
+<header class="topbar"><button class="brand-mark" id="homeButton" aria-label="На главную">N<span class="brand-spark">✦</span></button><div class="brand-copy"><p class="eyebrow">УЧИСЬ · ПРОБУЙ · РАСТИ</p><h1>NotiTest</h1><span class="brand-caption">Тесты для развития каждый день</span></div><button class="icon-button menu-toggle" id="menuToggle" aria-label="Открыть меню" aria-expanded="false">☰</button></header>
+<nav class="tabs" aria-label="Основные разделы">
+<button class="tab" data-view="today">Сегодня</button><button class="tab" data-view="learn">Учиться</button><button class="tab" data-view="practice">Практика</button>
 </nav>
 <main>
-<section id="view-home" class="view active">
+<section id="view-home" class="view">
 <div class="home-welcome"><div class="welcome-topline"><p class="eyebrow">ТВОЁ ПРОСТРАНСТВО ДЛЯ РОСТА</p><span class="welcome-chip">✦ каждый день</span></div><h2>Знания любят<br><span>движение.</span></h2><p class="muted">Проверяй себя, открывай новое и замечай, как растут твои знания.</p><div class="welcome-decoration" aria-hidden="true"><span>✳</span><i></i><b></b></div></div>
 <div class="home-shortcuts">
 <button class="home-tile streak-tile" data-go="stats"><span class="home-tile-icon">🔥</span><span class="home-tile-label">ТВОЯ СЕРИЯ</span><strong id="home-streak">0 дней</strong><small>Поддерживай учебный ритм</small><span class="tile-arrow">↗</span></button>
@@ -26,7 +26,7 @@
 </section>
 <button class="home-start-button" data-go="today">Перейти к заданиям <span>→</span></button>
 </section>
-<section id="view-today" class="view">
+<section id="view-today" class="view active">
 <div class="intro"><p class="eyebrow">ЕЖЕДНЕВНАЯ ПРАКТИКА</p><h2>Тренировка<br>для ума.</h2><p class="muted">20 заданий, полезные объяснения и маленький шаг к новым знаниям каждый день.</p></div>
 <article class="progress-card"><div class="row between"><div><p class="card-label">ТРЕНИРОВКА НА СЕГОДНЯ</p><strong id="progress-count">0 из 20</strong></div><span class="date-pill" id="today-date"></span></div><div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div><p class="muted small" id="progress-caption"></p></article><section id="quiz-area"></section>
 </section>
@@ -38,7 +38,7 @@
 <div class="metric-grid"><article class="metric"><span>Всего ответов</span><strong id="stat-answered">0</strong></article><article class="metric"><span>Правильных</span><strong id="stat-correct">0</strong></article><article class="metric"><span>Точность</span><strong id="stat-accuracy">0%</strong></article><article class="metric"><span>Сегодня</span><strong id="stat-today">0/20</strong></article></div>
 <article class="panel streak-panel"><div><span class="flame">🔥</span><strong id="streak-count">0 дней подряд</strong></div><p class="muted small">Серия растёт за завершённую ежедневную тренировку из 20 вопросов.</p></article>
 <article class="panel"><h3>Медали</h3><div id="achievements" class="achievement-grid"></div></article><article class="panel"><h3>Последние учебные дни</h3><div id="day-history" class="history-list"></div></article><article class="panel"><h3>Мои темы</h3><div id="topic-list" class="topic-list"></div></article>
-<div class="panel settings"><h3>Оформление</h3><label for="theme-select">Тема приложения</label><select id="theme-select"><option value="system">Как на iPhone</option><option value="light">Светлая</option><option value="dark">Тёмная</option></select></div>
+
 </section>
 <section id="view-learn" class="view">
 <div class="section-heading"><p class="eyebrow">АНГЛИЙСКИЙ КАЖДЫЙ ДЕНЬ</p><h2>Учиться</h2><p class="muted">Сохраняй слова, повторяй их, разбирай грамматику, слушай английскую речь и тренируй произношение.</p></div>
@@ -46,9 +46,25 @@
 <div id="learn-content" class="learn-content"></div>
 </section>
 </main>
-<footer><span>Любопытство сегодня. Уверенность завтра.</span><span class="footer-sub">Развивающие тесты и практика для учёбы.</span><span class="version">NotiTest · v1.11.0</span><span class="footer-sub">Обновлено: 7 ноября 2026</span></footer>
+<footer><span>Любопытство сегодня. Уверенность завтра.</span><span class="footer-sub">Развивающие тесты и практика для учёбы.</span><span class="version">NotiTest · v1.12.0</span><span class="footer-sub">Обновлено: 7 ноября 2026</span></footer>
 </div>
+<dialog id="menuDialog" class="menu-dialog" aria-label="Главное меню">
+<div class="menu-dialog-head"><div><p class="eyebrow">NOTITEST</p><h2>Меню</h2></div><button type="button" class="close-button" id="menuClose" aria-label="Закрыть меню">×</button></div>
+<div class="menu-links">
+<button type="button" class="menu-link" data-menu-go="dictionary"><span>📖</span><span>Мой словарь</span><span>›</span></button>
+<button type="button" class="menu-link" data-menu-go="review"><span>🗂️</span><span>Повторение слов</span><span>›</span></button>
+<button type="button" class="menu-link" data-menu-go="grammar"><span>🎓</span><span>Грамматика</span><span>›</span></button>
+<button type="button" class="menu-link" data-menu-go="listening"><span>🎧</span><span>Аудирование</span><span>›</span></button>
+<button type="button" class="menu-link" data-menu-go="speaking"><span>🎙️</span><span>Произношение</span><span>›</span></button>
+<div class="menu-separator"></div>
+<button type="button" class="menu-link" data-menu-go="bank"><span>📚</span><span>Все вопросы</span><span>›</span></button>
+<button type="button" class="menu-link" data-menu-go="wrong"><span>↩️</span><span>Работа над ошибками</span><span>›</span></button>
+<button type="button" class="menu-link" data-menu-go="stats"><span>📈</span><span>Прогресс и награды</span><span>›</span></button>
+<button type="button" class="menu-link" id="installHelp"><span>＋</span><span>Установка приложения</span><span>›</span></button>
+</div>
+<div class="menu-theme-row"><div><strong id="theme-label">Тёмная тема</strong><small>Одно нажатие меняет оформление</small></div><button type="button" class="theme-toggle" id="themeToggle" aria-label="Переключить тему"><span id="theme-icon">🌙</span><span class="theme-switch-track"><i></i></span></button></div>
+</dialog>
 <dialog id="installDialog"><div class="dialog-head"><p class="eyebrow">УСТАНОВКА НА IPHONE</p><button class="close-button" id="closeInstall">×</button></div><h2>Добавь NotiTest на экран «Домой»</h2><ol><li>Открой сайт в Safari.</li><li>Нажми «Поделиться».</li><li>Выбери «На экран Домой».</li><li>Подтверди добавление.</li></ol><p class="muted small">Для офлайн-режима сначала открой приложение при подключённом интернете.</p><button class="primary-button full" id="doneInstall">Понятно</button></dialog>
 <dialog id="dictionaryDialog" aria-labelledby="dict-term" class="dictionary-dialog"><div class="dialog-head"><p class="eyebrow">📖 СЛОВАРЬ</p><button type="button" class="close-button" id="dict-close" aria-label="Закрыть словарь">×</button></div><h2 id="dict-term"></h2><div class="dict-pronunciation-row"><p class="dict-ipa" id="dict-ipa"></p><button type="button" class="audio-button" id="dict-speak" aria-label="Прослушать произношение">🔊 Прослушать</button></div><p class="dict-label">Перевод</p><p class="dict-translation" id="dict-translation"></p><p class="dict-label">Объяснение</p><p class="dict-definition" id="dict-definition"></p><p class="dict-status" id="dict-status"></p><button type="button" class="secondary-button full" id="dict-save">＋ Добавить в мой словарь</button><button type="button" class="primary-button full" onclick="document.getElementById('dictionaryDialog').close()">Вернуться к тесту</button></dialog>
-<script src="./questions.js?v=1.11.2"></script><script src="./app.js?v=1.11.2"></script>
+<script src="./questions.js?v=1.12.0"></script><script src="./app.js?v=1.12.0"></script>
 </body></html>
