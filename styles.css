@@ -128,3 +128,29 @@ footer{padding-top:30px}
 .text-back{justify-self:start;background:transparent;color:var(--navy);font-weight:750;padding:5px 0}
 #dict-save{margin-top:13px}
 @media(max-width:420px){.tabs{gap:3px}.tab{padding:11px 6px;font-size:10px}.learn-subtab{padding:10px 11px;font-size:11px}}
+
+
+/* v1.11.0: listening, speech and pronunciation */
+.dict-pronunciation-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.dict-pronunciation-row .dict-ipa{margin:0;flex:1}
+.audio-button{border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--navy2) 9%,var(--white));color:var(--navy);padding:9px 12px;font-size:12px;font-weight:750;white-space:nowrap}
+.vocab-audio{padding:8px 10px;flex:none}
+.audio-overview{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.audio-overview>div{display:grid;gap:4px;padding:15px;border:1px solid var(--line);border-radius:15px;background:var(--white)}
+.audio-overview strong{font:800 25px Manrope;color:var(--navy)}
+.audio-overview span{font-size:11px;color:var(--muted)}
+.audio-lesson-card,.speaking-card{padding:19px;border:1px solid var(--line);border-radius:20px;background:var(--white);box-shadow:var(--shadow)}
+.audio-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.audio-lesson-card h2,.speaking-card h2{font:800 25px Manrope;color:var(--navy);margin:16px 0 7px}
+.audio-play{margin:17px 0 10px}
+.audio-secondary-actions{display:flex;gap:8px;margin:9px 0 15px}
+.audio-secondary-actions button{flex:1}
+.listening-transcript,.speech-result{padding:14px;margin:14px 0;border-radius:13px;background:color-mix(in srgb,var(--navy2) 8%,var(--white))}
+.listening-transcript strong,.speech-result strong{display:block;margin-bottom:7px;color:var(--navy)}
+.listening-transcript p,.speech-result p{font-size:14px;line-height:1.6}
+.listening-question{margin-top:19px}
+.listening-question h3{font-size:17px;line-height:1.4;margin-bottom:12px}
+.speaking-target{font:700 20px/1.5 Manrope;color:var(--ink);padding:16px;border-radius:14px;background:color-mix(in srgb,var(--navy2) 8%,var(--white));margin:14px 0}
+.speech-status{padding:11px 13px;border-radius:11px;background:color-mix(in srgb,var(--navy2) 8%,var(--white));font-size:13px;color:var(--muted);margin:12px 0}
+.speech-result span{font-size:12px;color:var(--muted);line-height:1.45}
+@media(max-width:420px){.audio-secondary-actions{flex-direction:column}.dict-pronunciation-row{align-items:flex-start}}

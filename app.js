@@ -1,6 +1,6 @@
 (() => {
 "use strict";
-const VERSION="1.10.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
+const VERSION="1.11.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
 const TOPICS=["Грамматика","Лексика","Use of English","Чтение"], $=id=>document.getElementById(id);
 const freshSession=date=>({date,ids:shuffle(QUESTIONS.map(q=>q.id),hash(date)).slice(0,20),index:0,answers:[]});
 // Учебные сутки идут по московскому времени: с 03:00 до 02:59 следующего дня.
@@ -20,7 +20,7 @@ let state=load(), selected=null, submitted=false, practice={ids:[],index:0,selec
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function question(id){return QUESTIONS.find(q=>q.id===id);}
-function activate(view){document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===view));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));if(view==="bank")renderBank();if(view==="practice")renderPractice();if(view==="home")renderHome();if(view==="learn")renderLearn();window.scrollTo({top:0,behavior:"smooth"});}
+function activate(view){if("speechSynthesis"in window)window.speechSynthesis.cancel();document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===view));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));if(view==="bank")renderBank();if(view==="practice")renderPractice();if(view==="home")renderHome();if(view==="learn")renderLearn();window.scrollTo({top:0,behavior:"smooth"});}
 const FACTS=[
 "В английском алфавите 26 букв, но примерно 44 звука. Поэтому одна и та же буква может звучать по-разному.",
 "Слово «queue» произносится почти как одна буква Q. Остальные буквы словно стоят в очереди.",
@@ -164,8 +164,8 @@ async function openDictionary(raw){
  }catch(e){if(request===dictionaryRequest){dictionaryField("dict-translation",QUESTION_VOCAB[term.toLowerCase()]||"Перевод временно недоступен");dictionaryField("dict-ipa","Транскрипция временно недоступна без словарного источника");dictionaryField("dict-definition","Попробуй подключиться к интернету, чтобы получить объяснение.");dictionaryField("dict-status","Онлайн-источник временно недоступен. Если перевод есть в банке заданий, его можно сохранить.");setDictSaveButton();}}finally{clearTimeout(timeout);}
 }
 $("dict-close").addEventListener("click",closeDictionary);
-$("dict-save").addEventListener("click",saveCurrentDictionaryWord);
-$("dictionaryDialog").addEventListener("close",()=>{dictionaryRequest++;});
+$("dict-save").addEventListener("click",saveCurrentDictionaryWord);$("dict-speak").addEventListener("click",()=>speakEnglish(dictionaryCurrentTerm));
+$("dictionaryDialog").addEventListener("close",()=>{dictionaryRequest++;if("speechSynthesis"in window)window.speechSynthesis.cancel();});
 $("dictionaryDialog").addEventListener("click",e=>{if(e.target===$("dictionaryDialog"))closeDictionary();});
 
 const GRAMMAR_LESSONS=[
@@ -202,10 +202,32 @@ const GRAMMAR_LESSONS=[
 {q:"We ___ wear a uniform at this school; it is a rule.",o:["has to","mustn't","have to","doesn't have to"],a:2,e:"С we используется have to для обязанности по правилу."},
 {q:"You ___ bring food. We have plenty.",o:["mustn't","don't have to","has to","must"],a:1,e:"Don't have to означает, что необходимости нет."}]}
 ];
+
+const LISTENING_TASKS=[
+{id:"cafe",level:"A1",title:"At the café",text:"Good morning. Could I have a cheese sandwich and a cup of tea, please? Of course. Would you like anything else? No, thank you. How much is it? It is six pounds.",question:"What does the customer order?",options:["A cheese sandwich and tea","A chicken salad and coffee","A cake and orange juice","Two cups of tea"],answer:0,explain:"The customer asks for a cheese sandwich and a cup of tea."},
+{id:"station",level:"A2",title:"At the train station",text:"Attention, please. The ten fifteen train to Oxford will now leave from platform four. The train is delayed by twenty minutes. We apologise for the inconvenience.",question:"Which platform should passengers use?",options:["Platform two","Platform three","Platform four","Platform five"],answer:2,explain:"The announcement says that the train to Oxford will leave from platform four."},
+{id:"weekend",level:"A2",title:"Weekend plans",text:"Hi, Emma. Are you free this weekend? On Saturday, I am going to visit the city museum with my cousin. On Sunday, I will stay at home and help my grandmother in the garden.",question:"What is the speaker planning to do on Saturday?",options:["Visit a city museum","Work in the garden","Stay at home","Meet a teacher"],answer:0,explain:"The speaker says that the museum visit is planned for Saturday."},
+{id:"library",level:"B1",title:"A message from the library",text:"Hello, this is a reminder from Green Street Library. The books you borrowed are due back this Friday. You can return them using the box near the main entrance. The library will be closed on Sunday.",question:"When should the books be returned?",options:["On Thursday","On Friday","On Saturday","On Sunday"],answer:1,explain:"The reminder says that the books are due back this Friday."},
+{id:"weather",level:"B1",title:"Weather report",text:"Tomorrow will start bright and cool. By lunchtime, clouds will move in from the west, and there may be heavy rain in the afternoon. If you are going out later, remember to take an umbrella.",question:"What does the speaker advise people to take?",options:["A warm hat","Sunglasses","An umbrella","A bottle of water"],answer:2,explain:"The weather report advises people to take an umbrella because rain is expected."}
+];
+const SPEAKING_PROMPTS=[
+{level:"A1",title:"Приветствие",text:"Hello, my name is Alex."},
+{level:"A1",title:"О себе",text:"I am learning English every day."},
+{level:"A2",title:"Планы",text:"I would like to visit London next year."},
+{level:"A2",title:"Свободное время",text:"In my free time, I enjoy reading books."},
+{level:"B1",title:"Мнение",text:"I think learning a language takes time and practice."},
+{level:"B1",title:"Опыт",text:"Last weekend, I went to the park with my friends."},
+{level:"B1",title:"Цели",text:"My goal is to speak English more confidently."}
+];
+let listeningIndex=0,listeningSelected=null,listeningSubmitted=false,speakingIndex=0,speakingRecognition=null,speakingStatus="",speakingTranscript="";
+let listeningStats={completed:0,correct:0};
+
 let learnSection="vocab", reviewQueue=[], reviewIndex=0, reviewRevealed=false, lessonState=null, dictionaryCurrentTerm="";
 function ensureLearningState(){
  state.vocabulary=state.vocabulary&&typeof state.vocabulary==="object"?state.vocabulary:{};
  state.lessonProgress=state.lessonProgress&&typeof state.lessonProgress==="object"?state.lessonProgress:{};
+ state.listeningProgress=state.listeningProgress&&typeof state.listeningProgress==="object"?state.listeningProgress:{completed:0,correct:0};
+ state.speakingProgress=state.speakingProgress&&typeof state.speakingProgress==="object"?state.speakingProgress:{attempts:0};
 }
 function dayKeyPlus(key,days){const [y,m,d]=key.split("-").map(Number),dt=new Date(Date.UTC(y,m-1,d+days));return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,"0")}-${String(dt.getUTCDate()).padStart(2,"0")}`;}
 function isDueWord(w){return !w.dueAt||w.dueAt<=Date.now();}
@@ -219,18 +241,21 @@ function addVocabularyWord(term,translation,ipa,definition){
 }
 function renderLearn(){
  ensureLearningState();
- const tabs=[["vocab","Мой словарь"],["review","Повторение"],["grammar","Грамматика"]];
+ const tabs=[["vocab","Мой словарь"],["review","Повторение"],["grammar","Грамматика"],["listening","Аудирование"],["speaking","Произношение"]];
  $("learn-subnav").innerHTML=tabs.map(([id,label])=>`<button class="learn-subtab ${learnSection===id?"active":""}" data-learn-section="${id}">${label}</button>`).join("");
  $("learn-subnav").querySelectorAll("[data-learn-section]").forEach(b=>b.addEventListener("click",()=>{learnSection=b.dataset.learnSection;renderLearn();}));
  if(learnSection==="vocab")renderVocabulary();
  else if(learnSection==="review")renderReview();
+ else if(learnSection==="listening")renderListening();
+ else if(learnSection==="speaking")renderSpeaking();
  else renderGrammar();
 }
 function renderVocabulary(){
  const words=Object.values(state.vocabulary).sort((a,b)=>b.createdAt-a.createdAt),due=dueWords().length;
- $("learn-content").innerHTML=`<div class="learn-summary"><div><strong>${words.length}</strong><span>слов сохранено</span></div><div><strong>${due}</strong><span>пора повторить</span></div></div><div class="learn-actions"><button class="primary-button" id="startWordReview" ${due?"":"disabled"}>Повторить слова · ${due}</button></div>${words.length?`<div class="vocab-list">${words.map(w=>`<article class="vocab-item"><button class="vocab-open" data-vocab-open="${esc(w.term)}"><strong>${esc(w.term)}</strong><span>${esc(w.translation)}</span><small>${esc(w.ipa)}</small></button><button class="vocab-delete" data-vocab-delete="${esc(w.term)}" aria-label="Удалить ${esc(w.term)}">×</button></article>`).join("")}</div>`:'<div class="empty-state">Здесь пока пусто. Открой словарь у любого английского слова и нажми «Добавить в мой словарь».</div>'}`;
+ $("learn-content").innerHTML=`<div class="learn-summary"><div><strong>${words.length}</strong><span>слов сохранено</span></div><div><strong>${due}</strong><span>пора повторить</span></div></div><div class="learn-actions"><button class="primary-button" id="startWordReview" ${due?"":"disabled"}>Повторить слова · ${due}</button></div>${words.length?`<div class="vocab-list">${words.map(w=>`<article class="vocab-item"><button class="vocab-open" data-vocab-open="${esc(w.term)}"><strong>${esc(w.term)}</strong><span>${esc(w.translation)}</span><small>${esc(w.ipa)}</small></button><button class="audio-button vocab-audio" data-speak="${esc(w.term)}" aria-label="Прослушать ${esc(w.term)}">🔊</button><button class="vocab-delete" data-vocab-delete="${esc(w.term)}" aria-label="Удалить ${esc(w.term)}">×</button></article>`).join("")}</div>`:'<div class="empty-state">Здесь пока пусто. Открой словарь у любого английского слова и нажми «Добавить в мой словарь».</div>'}`;
  $("startWordReview").addEventListener("click",startWordReview);
  $("learn-content").querySelectorAll("[data-vocab-open]").forEach(b=>b.addEventListener("click",()=>openDictionary(b.dataset.vocabOpen)));
+ $("learn-content").querySelectorAll("[data-speak]").forEach(b=>b.addEventListener("click",()=>speakEnglish(b.dataset.speak)));
  $("learn-content").querySelectorAll("[data-vocab-delete]").forEach(b=>b.addEventListener("click",()=>{delete state.vocabulary[b.dataset.vocabDelete.toLowerCase()];save();renderVocabulary();}));
 }
 function startWordReview(){reviewQueue=dueWords().map(w=>w.term.toLowerCase());reviewIndex=0;reviewRevealed=false;learnSection="review";renderLearn();}
@@ -240,8 +265,8 @@ function renderReview(){
  if(reviewIndex>=reviewQueue.length){content.innerHTML=`<article class="completion-card"><div class="completion-icon">✓</div><h2>Повторение завершено</h2><p class="muted">Карточек обработано: ${reviewQueue.length}</p><button class="primary-button" id="reviewAgain">Вернуться к словарю</button></article>`;content.querySelector("#reviewAgain").onclick=()=>{reviewQueue=[];learnSection="vocab";renderLearn();};return;}
  const w=state.vocabulary[reviewQueue[reviewIndex]];
  if(!w){reviewIndex++;renderReview();return;}
- content.innerHTML=`<article class="review-card"><div class="review-meta"><span>КАРТОЧКА ${reviewIndex+1} ИЗ ${reviewQueue.length}</span><span>${w.reps||0} повторений</span></div><h2>${esc(w.term)}</h2><p class="review-ipa">${esc(w.ipa)}</p>${reviewRevealed?`<div class="review-answer"><h3>${esc(w.translation)}</h3><p>${esc(w.definition)}</p></div>`:'<p class="muted">Вспомни перевод, затем открой ответ.</p>'}<button class="secondary-button full" id="revealWord" ${reviewRevealed?"hidden":""}>Показать ответ</button>${reviewRevealed?`<div class="rating-buttons"><button data-rating="again">Не помню</button><button data-rating="hard">Трудно</button><button data-rating="good">Хорошо</button><button data-rating="easy">Легко</button></div>`:""}</article>`;
- const reveal=content.querySelector("#revealWord");if(reveal)reveal.onclick=()=>{reviewRevealed=true;renderReview();};
+ content.innerHTML=`<article class="review-card"><div class="review-meta"><span>КАРТОЧКА ${reviewIndex+1} ИЗ ${reviewQueue.length}</span><span>${w.reps||0} повторений</span></div><h2>${esc(w.term)}</h2><button class="audio-button" id="reviewSpeak">🔊 Прослушать слово</button><p class="review-ipa">${esc(w.ipa)}</p>${reviewRevealed?`<div class="review-answer"><h3>${esc(w.translation)}</h3><p>${esc(w.definition)}</p></div>`:'<p class="muted">Вспомни перевод, затем открой ответ.</p>'}<button class="secondary-button full" id="revealWord" ${reviewRevealed?"hidden":""}>Показать ответ</button>${reviewRevealed?`<div class="rating-buttons"><button data-rating="again">Не помню</button><button data-rating="hard">Трудно</button><button data-rating="good">Хорошо</button><button data-rating="easy">Легко</button></div>`:""}</article>`;
+ content.querySelector("#reviewSpeak").onclick=()=>speakEnglish(w.term);const reveal=content.querySelector("#revealWord");if(reveal)reveal.onclick=()=>{reviewRevealed=true;renderReview();};
  content.querySelectorAll("[data-rating]").forEach(b=>b.addEventListener("click",()=>rateWord(w.term,b.dataset.rating)));
 }
 function rateWord(term,rating){
@@ -253,6 +278,55 @@ function rateWord(term,rating){
  else{w.interval=w.interval?Math.max(4,Math.round(w.interval*2.8)):4;w.dueAt=now+w.interval*86400000;}
  save();reviewIndex++;reviewRevealed=false;renderReview();
 }
+
+function speakEnglish(text,rate=0.88){
+ if(!("speechSynthesis" in window)){alert("Озвучивание не поддерживается этим браузером.");return;}
+ window.speechSynthesis.cancel();
+ const utterance=new SpeechSynthesisUtterance(String(text||""));
+ utterance.lang="en-US";utterance.rate=rate;utterance.pitch=1;
+ const voices=window.speechSynthesis.getVoices();
+ const voice=voices.find(v=>/^en-GB/i.test(v.lang))||voices.find(v=>/^en-US/i.test(v.lang))||voices.find(v=>/^en/i.test(v.lang));
+ if(voice)utterance.voice=voice;
+ window.speechSynthesis.speak(utterance);
+}
+function renderListening(){
+ const content=$("learn-content"),task=LISTENING_TASKS[listeningIndex];
+ if(!task){content.innerHTML='<p class="empty-state">Аудиотренировка пока недоступна.</p>';return;}
+ const stats=state.listeningProgress||{completed:0,correct:0};
+ content.innerHTML=`<div class="audio-overview"><div><strong>${stats.completed||0}</strong><span>прослушиваний завершено</span></div><div><strong>${stats.completed?Math.round((stats.correct||0)/stats.completed*100):0}%</strong><span>точность ответов</span></div></div><article class="audio-lesson-card"><div class="audio-card-top"><span class="lesson-level">${task.level}</span><span class="muted small">АУДИРОВАНИЕ · ${listeningIndex+1}/${LISTENING_TASKS.length}</span></div><h2>${esc(task.title)}</h2><p class="muted">Послушай запись и ответь на вопрос. Текст появится после проверки.</p><button class="primary-button full audio-play" id="listenPlay">▶ Прослушать запись</button><div class="audio-secondary-actions"><button class="secondary-button" id="listenSlow">🐢 Медленнее</button><button class="secondary-button" id="listenAgain">↻ Повторить</button></div>${listeningSubmitted?`<div class="listening-transcript"><strong>Текст аудио</strong><p>${esc(task.text)}</p></div>`:""}<div class="listening-question"><h3>${esc(task.question)}</h3><div class="lesson-options">${task.options.map((o,i)=>`<button class="lesson-option ${listeningSubmitted&&i===task.answer?"correct":""} ${listeningSubmitted&&listeningSelected===i&&i!==task.answer?"wrong":""}" data-listen-choice="${i}" ${listeningSubmitted?"disabled":""}>${esc(o)}</button>`).join("")}</div>${listeningSubmitted?`<div class="feedback show"><p>${esc(task.explain)}</p><p>${listeningSelected===task.answer?"Отлично, ты понял запись!":"Попробуй ещё раз позже и обрати внимание на ключевые слова."}</p></div>`:""}<button class="primary-button full" id="listenAction" ${listeningSelected===null&&!listeningSubmitted?"disabled":""}>${listeningSubmitted?(listeningIndex===LISTENING_TASKS.length-1?"Завершить раздел":"Следующая запись"):"Проверить ответ"}</button></div></article>`;
+ content.querySelector("#listenPlay").onclick=()=>speakEnglish(task.text,0.9);
+ content.querySelector("#listenAgain").onclick=()=>speakEnglish(task.text,0.9);
+ content.querySelector("#listenSlow").onclick=()=>speakEnglish(task.text,0.72);
+ content.querySelectorAll("[data-listen-choice]").forEach(b=>b.onclick=()=>{if(listeningSubmitted)return;listeningSelected=Number(b.dataset.listenChoice);renderListening();});
+ content.querySelector("#listenAction").onclick=()=>{
+  if(!listeningSubmitted&&listeningSelected!==null){
+   listeningSubmitted=true;const p=state.listeningProgress||{completed:0,correct:0};p.completed=(p.completed||0)+1;if(listeningSelected===task.answer)p.correct=(p.correct||0)+1;state.listeningProgress=p;save();renderListening();
+  }else if(listeningSubmitted){
+   if(listeningIndex<LISTENING_TASKS.length-1){listeningIndex++;listeningSelected=null;listeningSubmitted=false;renderListening();}
+   else{content.innerHTML=`<article class="completion-card"><div class="completion-icon">🎧</div><h2>Аудирование завершено</h2><p class="muted">Ты прошёл все ${LISTENING_TASKS.length} записи. Можно повторить раздел, чтобы закрепить понимание на слух.</p><button class="primary-button full" id="listenRestart">Повторить аудирование</button></article>`;content.querySelector("#listenRestart").onclick=()=>{listeningIndex=0;listeningSelected=null;listeningSubmitted=false;renderListening();};}
+  }
+ };
+}
+function normalizeSpeech(s){return String(s||"").toLowerCase().replace(/[^a-z0-9'\s]/g," ").replace(/\s+/g," ").trim();}
+function renderSpeaking(){
+ const content=$("learn-content"),item=SPEAKING_PROMPTS[speakingIndex];
+ content.innerHTML=`<div class="audio-overview"><div><strong>${state.speakingProgress?.attempts||0}</strong><span>попыток произношения</span></div><div><strong>${speakingIndex+1}/${SPEAKING_PROMPTS.length}</strong><span>фраз в тренировке</span></div></div><article class="speaking-card"><span class="lesson-level">${item.level}</span><p class="muted small">ПРОИЗНОШЕНИЕ · ПОВТОРИ ВСЛУХ</p><h2>${esc(item.title)}</h2><p class="speaking-target">${esc(item.text)}</p><button class="secondary-button full" id="speakModel">🔊 Послушать пример</button><button class="primary-button full" id="startSpeech">🎙 Начать запись</button><p class="speech-status" id="speechStatus">${esc(speakingStatus||"Нажми запись и произнеси фразу на английском.")}</p>${speakingTranscript?`<div class="speech-result"><strong>Распознано браузером</strong><p>${esc(speakingTranscript)}</p><span>${normalizeSpeech(speakingTranscript)===normalizeSpeech(item.text)?"Фраза распознана полностью.":"Сравни распознанный текст с образцом и попробуй ещё раз."}</span></div>`:""}<div class="audio-secondary-actions"><button class="secondary-button" id="speechPrev" ${speakingIndex===0?"disabled":""}>← Предыдущая</button><button class="secondary-button" id="speechNext">${speakingIndex===SPEAKING_PROMPTS.length-1?"Начать сначала":"Следующая фраза →"}</button></div><p class="muted small">Распознавание зависит от браузера и может потребовать разрешение на микрофон. Результат показывает распознанный текст, а не точную оценку акцента.</p></article>`;
+ content.querySelector("#speakModel").onclick=()=>speakEnglish(item.text,0.82);
+ content.querySelector("#startSpeech").onclick=()=>{
+  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!Recognition){speakingStatus="Этот браузер не поддерживает распознавание речи. Послушай пример и повтори фразу вслух самостоятельно.";renderSpeaking();return;}
+  if(speakingRecognition){try{speakingRecognition.abort();}catch(e){}}
+  speakingTranscript="";speakingStatus="Слушаю… произнеси фразу после сигнала браузера.";renderSpeaking();
+  const recognition=new Recognition();speakingRecognition=recognition;recognition.lang="en-US";recognition.interimResults=false;recognition.maxAlternatives=1;
+  recognition.onresult=e=>{speakingTranscript=e.results?.[0]?.[0]?.transcript||"";speakingStatus="Готово. Сравни результат с образцом.";state.speakingProgress=state.speakingProgress||{attempts:0};state.speakingProgress.attempts++;save();renderSpeaking();};
+  recognition.onerror=e=>{speakingStatus=e.error==="not-allowed"?"Нет доступа к микрофону. Разреши его в настройках браузера.":`Не удалось распознать речь (${e.error}). Попробуй ещё раз.`;renderSpeaking();};
+  recognition.onend=()=>{if(speakingStatus==="Слушаю… произнеси фразу после сигнала браузера."){speakingStatus="Запись завершена. Если текст не появился, попробуй ещё раз.";renderSpeaking();}};
+  try{recognition.start();}catch(e){speakingStatus="Не удалось начать запись. Попробуй ещё раз.";renderSpeaking();}
+ };
+ content.querySelector("#speechPrev").onclick=()=>{if(speakingIndex>0)speakingIndex--;speakingTranscript="";speakingStatus="";renderSpeaking();};
+ content.querySelector("#speechNext").onclick=()=>{speakingIndex=speakingIndex===SPEAKING_PROMPTS.length-1?0:speakingIndex+1;speakingTranscript="";speakingStatus="";renderSpeaking();};
+}
+
 function renderGrammar(){
  const content=$("learn-content");
  if(lessonState){renderLesson();return;}
@@ -317,7 +391,7 @@ function setTheme(v){
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>activate(t.dataset.view)));$("homeButton").addEventListener("click",()=>activate("home"));document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>activate(b.dataset.go)));showFact(0);
 function checkDailyRollover(){const key=today();if(state.session.date!==key){state.session=freshSession(key);selected=null;submitted=false;save();render();return true;}return false;}
 setInterval(checkDailyRollover,15000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkDailyRollover();scheduleFact();}});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkDailyRollover();scheduleFact();}else if("speechSynthesis"in window){window.speechSynthesis.cancel();}});
 fillTopicSelect("bank-topic");fillTopicSelect("practice-topic");
 ["bank-search","bank-topic","bank-level"].forEach(id=>$(id).addEventListener(id==="bank-search"?"input":"change",renderBank));
 let savedTheme="system";try{savedTheme=localStorage.getItem("nmt-theme")||"system";}catch(e){}
