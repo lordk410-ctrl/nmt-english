@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#6d5ce7"><meta name="description" content="NotiTest — развивающие тесты и ежедневная практика для учёбы.">
 <link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icons/icon-192.png">
-<link rel="stylesheet" href="./styles.css?v=1.12.0"><title>NotiTest</title>
+<link rel="stylesheet" href="./styles.css?v=1.12.1"><title>NotiTest</title>
 </head>
 <body>
 <div class="app-shell">
@@ -41,26 +41,25 @@
 
 </section>
 <section id="view-learn" class="view">
-<div class="section-heading"><p class="eyebrow">АНГЛИЙСКИЙ КАЖДЫЙ ДЕНЬ</p><h2>Учиться</h2><p class="muted">Сохраняй слова, повторяй их, разбирай грамматику, слушай английскую речь и тренируй произношение.</p></div>
+<div class="section-heading" id="learn-heading"><p class="eyebrow" id="learn-kicker">АНГЛИЙСКИЙ КАЖДЫЙ ДЕНЬ</p><h2 id="learn-title">Учиться</h2><p class="muted" id="learn-description">Разбирай грамматику, слушай английскую речь и тренируй произношение.</p></div>
 <div class="learn-subnav" id="learn-subnav"></div>
 <div id="learn-content" class="learn-content"></div>
 </section>
 </main>
-<footer><span>Любопытство сегодня. Уверенность завтра.</span><span class="footer-sub">Развивающие тесты и практика для учёбы.</span><span class="version">NotiTest · v1.12.0</span><span class="footer-sub">Обновлено: 7 ноября 2026</span></footer>
+<footer><span>Любопытство сегодня. Уверенность завтра.</span><span class="footer-sub">Развивающие тесты и практика для учёбы.</span><span class="version">NotiTest · v1.12.1</span><span class="footer-sub">Обновлено: 7 ноября 2026</span></footer>
 </div>
 <dialog id="menuDialog" class="menu-dialog" aria-label="Главное меню">
 <div class="menu-dialog-head"><div><p class="eyebrow">NOTITEST</p><h2>Меню</h2></div><button type="button" class="close-button" id="menuClose" aria-label="Закрыть меню">×</button></div>
 <div class="menu-links">
-<button type="button" class="menu-link" data-menu-go="dictionary"><span>📖</span><span>Мой словарь</span><span>›</span></button>
-<button type="button" class="menu-link" data-menu-go="review"><span>🗂️</span><span>Повторение слов</span><span>›</span></button>
-<button type="button" class="menu-link" data-menu-go="grammar"><span>🎓</span><span>Грамматика</span><span>›</span></button>
-<button type="button" class="menu-link" data-menu-go="listening"><span>🎧</span><span>Аудирование</span><span>›</span></button>
-<button type="button" class="menu-link" data-menu-go="speaking"><span>🎙️</span><span>Произношение</span><span>›</span></button>
-<div class="menu-separator"></div>
-<button type="button" class="menu-link" data-menu-go="bank"><span>📚</span><span>Все вопросы</span><span>›</span></button>
-<button type="button" class="menu-link" data-menu-go="wrong"><span>↩️</span><span>Работа над ошибками</span><span>›</span></button>
-<button type="button" class="menu-link" data-menu-go="stats"><span>📈</span><span>Прогресс и награды</span><span>›</span></button>
-<button type="button" class="menu-link" id="installHelp"><span>＋</span><span>Установка приложения</span><span>›</span></button>
+<button type="button" class="menu-link menu-vocab" data-menu-go="dictionary"><span class="menu-icon">📖</span><span class="menu-copy"><strong>Мой словарь</strong><small>Сохранённые слова</small></span></button>
+<button type="button" class="menu-link menu-review" data-menu-go="review"><span class="menu-icon">🧠</span><span class="menu-copy"><strong>Повторение</strong><small>Карточки слов</small></span></button>
+<button type="button" class="menu-link menu-grammar" data-menu-go="grammar"><span class="menu-icon">✍️</span><span class="menu-copy"><strong>Грамматика</strong><small>Правила и уроки</small></span></button>
+<button type="button" class="menu-link menu-listening" data-menu-go="listening"><span class="menu-icon">🎧</span><span class="menu-copy"><strong>Аудирование</strong><small>Понимание речи</small></span></button>
+<button type="button" class="menu-link menu-speaking" data-menu-go="speaking"><span class="menu-icon">🎙️</span><span class="menu-copy"><strong>Произношение</strong><small>Практика речи</small></span></button>
+<button type="button" class="menu-link menu-bank" data-menu-go="bank"><span class="menu-icon">📚</span><span class="menu-copy"><strong>Все вопросы</strong><small>Банк заданий</small></span></button>
+<button type="button" class="menu-link menu-wrong" data-menu-go="wrong"><span class="menu-icon">↩️</span><span class="menu-copy"><strong>Мои ошибки</strong><small>Работа над сложным</small></span></button>
+<button type="button" class="menu-link menu-stats" data-menu-go="stats"><span class="menu-icon">📈</span><span class="menu-copy"><strong>Прогресс</strong><small>Статистика и награды</small></span></button>
+<button type="button" class="menu-link menu-install" id="installHelp"><span class="menu-icon">＋</span><span class="menu-copy"><strong>Установка</strong><small>На экран телефона</small></span></button>
 </div>
 <div class="menu-theme-row"><div><strong id="theme-label">Тёмная тема</strong><small>Одно нажатие меняет оформление</small></div><button type="button" class="theme-toggle" id="themeToggle" aria-label="Переключить тему"><span id="theme-icon">🌙</span><span class="theme-switch-track"><i></i></span></button></div>
 </dialog>

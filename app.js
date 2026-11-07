@@ -1,6 +1,6 @@
 (() => {
 "use strict";
-const VERSION="1.12.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
+const VERSION="1.12.1", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
 const TOPICS=["Грамматика","Лексика","Use of English","Чтение"], $=id=>document.getElementById(id);
 const freshSession=date=>({date,ids:shuffle(QUESTIONS.map(q=>q.id),hash(date)).slice(0,20),index:0,answers:[]});
 // Учебные сутки идут по московскому времени: с 03:00 до 02:59 следующего дня.
@@ -246,7 +246,7 @@ const SPEAKING_PROMPTS=[
 let listeningIndex=0,listeningSelected=null,listeningSubmitted=false,speakingIndex=0,speakingRecognition=null,speakingStatus="",speakingTranscript="";
 let listeningStats={completed:0,correct:0};
 
-let learnSection="vocab", reviewQueue=[], reviewIndex=0, reviewRevealed=false, lessonState=null, dictionaryCurrentTerm="";
+let learnSection="grammar", reviewQueue=[], reviewIndex=0, reviewRevealed=false, lessonState=null, dictionaryCurrentTerm="";
 function ensureLearningState(){
  state.vocabulary=state.vocabulary&&typeof state.vocabulary==="object"?state.vocabulary:{};
  state.lessonProgress=state.lessonProgress&&typeof state.lessonProgress==="object"?state.lessonProgress:{};
@@ -265,9 +265,14 @@ function addVocabularyWord(term,translation,ipa,definition){
 }
 function renderLearn(){
  ensureLearningState();
- const tabs=[["vocab","Мой словарь"],["review","Повторение"],["grammar","Грамматика"],["listening","Аудирование"],["speaking","Произношение"]];
- $("learn-subnav").innerHTML=tabs.map(([id,label])=>`<button class="learn-subtab ${learnSection===id?"active":""}" data-learn-section="${id}">${label}</button>`).join("");
+ const standalone=learnSection==="vocab"||learnSection==="review";
+ const tabs=[["grammar","Грамматика"],["listening","Аудирование"],["speaking","Произношение"]];
+ $("learn-subnav").hidden=standalone;
+ $("learn-subnav").innerHTML=standalone?"":tabs.map(([id,label])=>`<button class="learn-subtab ${learnSection===id?"active":""}" data-learn-section="${id}">${label}</button>`).join("");
  $("learn-subnav").querySelectorAll("[data-learn-section]").forEach(b=>b.addEventListener("click",()=>{learnSection=b.dataset.learnSection;renderLearn();}));
+ $("learn-kicker").textContent=standalone?"ЛИЧНОЕ ОБУЧЕНИЕ":"АНГЛИЙСКИЙ КАЖДЫЙ ДЕНЬ";
+ $("learn-title").textContent=learnSection==="vocab"?"Мой словарь":learnSection==="review"?"Повторение слов":"Учиться";
+ $("learn-description").textContent=learnSection==="vocab"?"Твои сохранённые слова, переводы и произношение.":learnSection==="review"?"Повторяй слова в нужный момент, чтобы надолго сохранить их в памяти.":"Разбирай грамматику, слушай английскую речь и тренируй произношение.";
  if(learnSection==="vocab")renderVocabulary();
  else if(learnSection==="review")renderReview();
  else if(learnSection==="listening")renderListening();
@@ -420,7 +425,7 @@ function updateThemeToggle(){
  if(icon)icon.textContent=dark?"🌙":"☀️";
  if(button)button.setAttribute("aria-label",dark?"Включена тёмная тема. Переключить на светлую":"Включена светлая тема. Переключить на тёмную");
 }
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>activate(t.dataset.view)));
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{if(t.dataset.view==="learn")learnSection="grammar";activate(t.dataset.view);}));
 $("homeButton").addEventListener("click",()=>activate("today"));
 const menuDialog=$("menuDialog"),menuToggle=$("menuToggle");
 function closeMenu(){if(menuDialog.open)menuDialog.close();menuToggle.setAttribute("aria-expanded","false");menuToggle.textContent="☰";}
