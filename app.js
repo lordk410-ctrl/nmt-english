@@ -1,6 +1,6 @@
 (() => {
 "use strict";
-const VERSION="1.8.2", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
+const VERSION="1.9.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
 const TOPICS=["Грамматика","Лексика","Use of English","Чтение"], $=id=>document.getElementById(id);
 const freshSession=date=>({date,ids:shuffle(QUESTIONS.map(q=>q.id),hash(date)).slice(0,20),index:0,answers:[]});
 // Учебные сутки идут по московскому времени: с 03:00 до 02:59 следующего дня.
@@ -42,13 +42,90 @@ function renderHome(){const done=state.session.index>=20;const count=state.sessi
 
 function render(){const done=state.session.index;renderHome();$("today-date").textContent=formatDate(today());$("progress-count").textContent=`${done} из 20`;$("progress-fill").style.width=`${done/20*100}%`;$("progress-caption").textContent=done===20?"Все задания на сегодня выполнены.":`Осталось заданий: ${20-done}.`;renderDaily();renderStats();}
 function renderDaily(){const area=$("quiz-area");if(state.session.index>=20){area.innerHTML=`<article class="completion-card"><div class="completion-icon">✦</div><h2>Тренировка завершена</h2><div class="score">${state.session.answers.filter(a=>a.correct).length} / 20</div><p class="muted">Правильных ответов сегодня</p><p class="muted small">Новая подборка появится завтра. Свободная практика доступна без ограничений.</p></article>`;return;}renderQuestion(area,question(state.session.ids[state.session.index]),state.session.index+1,20,selected,submitted,"daily");}
+function wordMarkup(value){return esc(value).replace(/([A-Za-z]+(?:[’'][A-Za-z]+)*)/g, (word)=>`<span class="dict-word" data-dict-word="${word.replace(/&/g,'&amp;')}" tabindex="0" role="button" aria-label="Перевести ${word}">${word}</span>`);}
+function bindDictionary(area){
+ area.querySelectorAll("[data-dict-word]").forEach(el=>{
+  const open=()=>{if(!window.getSelection()?.toString().trim())openDictionary(el.textContent);};
+  el.addEventListener("click",open);
+  el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openDictionary(el.textContent);}});
+ });
+ area.querySelectorAll("[data-dict-option]").forEach(el=>el.addEventListener("click",e=>{e.stopPropagation();openDictionary(el.dataset.dictOption);}));
+ const translate=area.querySelector("[data-translate-selection]");
+ if(translate)translate.addEventListener("click",()=>{
+  const selection=window.getSelection(),value=selection?.toString().trim();
+  if(value){openDictionary(value);selection.removeAllRanges();}
+  else openDictionary(area.querySelector(".question-text")?.textContent||"");
+ });
+}
 function renderQuestion(area,q,n,total,chosen,done,mode){if(!q){area.innerHTML='<p class="empty-state">Вопросы не найдены. Проверь, загружен ли questions.js.</p>';return;}
-const opts=q.o.map((v,i)=>{let c="option";if(chosen===i)c+=" selected";if(done&&i===q.a)c+=" correct";else if(done&&i===chosen)c+=" wrong";return `<button class="${c}" data-choice="${i}" ${done?"disabled":""}><span class="option-letter">${"ABCD"[i]}</span><span class="option-text">${esc(v)}</span></button>`;}).join("");
+const opts=q.o.map((v,i)=>{let c="option";if(chosen===i)c+=" selected";if(done&&i===q.a)c+=" correct";else if(done&&i===chosen)c+=" wrong";return `<button class="${c}" data-choice="${i}" ${done?"disabled":""}><span class="option-letter">${"ABCD"[i]}</span><span class="option-text">${esc(v)}</span><span class="dict-option-action" data-dict-option="${esc(v)}" role="button" tabindex="0" aria-label="Перевести вариант ${"ABCD"[i]}">📖</span></button>`;}).join("");
 const feedback=done?`<div class="feedback show"><h3>${chosen===q.a?"Верно!":"Разберём ответ"}</h3><p class="answer-line">Правильный ответ: ${esc(q.o[q.a])}</p><p>${chosen===q.a?esc(q.e):`Твой вариант «${esc(q.o[chosen])}» не подходит. ${esc(q.e)}`}</p></div>`:"";
-area.innerHTML=`<article class="question-card"><div class="question-meta"><span class="topic-tag">${esc(q.topic)}</span><span class="level-tag">Уровень ${q.level} · ${n}/${total}</span></div><h2 class="question-text">${esc(q.q)}</h2><div class="options">${opts}</div>${feedback}<button class="primary-button" id="answerAction" ${!done&&chosen===null?"disabled":""}>${done?(mode==="daily"?"Следующее задание":"Следующий вопрос"):"Проверить ответ"}</button></article>`;
+area.innerHTML=`<article class="question-card"><div class="question-meta"><span class="topic-tag">${esc(q.topic)}</span><span class="level-tag">Уровень ${q.level} · ${n}/${total}</span></div><h2 class="question-text">${wordMarkup(q.q)}</h2><p class="dict-help">Нажми на слово или выдели фразу и нажми «Перевести выделенное».</p><button type="button" class="dict-selection-button" data-translate-selection>📖 Перевести выделенное</button><div class="options">${opts}</div>${feedback}<button class="primary-button" id="answerAction" ${!done&&chosen===null?"disabled":""}>${done?(mode==="daily"?"Следующее задание":"Следующий вопрос"):"Проверить ответ"}</button></article>`;
+bindDictionary(area);
 area.querySelectorAll("[data-choice]").forEach(b=>b.addEventListener("click",()=>{if(mode==="daily"){selected=+b.dataset.choice;renderDaily();}else{practice.selected=+b.dataset.choice;renderPractice();}}));
 $("answerAction").addEventListener("click",()=>{if(mode==="daily"){if(!submitted)submitDaily();else nextDaily();}else{if(!practice.submitted)submitPractice();else nextPractice();}});
 }
+const DICT_LOCAL={
+ "marine":["морской","/məˈriːn/","Относится к морю и морской среде."],
+ "research":["исследование","/rɪˈsɜːtʃ/","Изучение вопроса с помощью наблюдений и данных."],
+ "project":["проект","/ˈprɒdʒekt/","Запланированная работа с определённой целью."],
+ "coast":["побережье","/kəʊst/","Земля рядом с морем или океаном."],
+ "university":["университет","/ˌjuːnɪˈvɜːsɪti/","Высшее учебное заведение."],
+ "team":["команда","/tiːm/","Группа людей, работающих вместе."],
+ "collected":["собрали","/kəˈlektɪd/","Прошедшая форма глагола collect: собирать."],
+ "water":["вода","/ˈwɔːtə/","Жидкость; в сочетаниях может значить водный."],
+ "samples":["образцы","/ˈsɑːmpəlz/","Небольшие количества материала для изучения."],
+ "study":["изучать","/ˈstʌdi/","Исследовать или учиться."],
+ "tiny":["крошечный","/ˈtaɪni/","Очень маленький."],
+ "pieces":["кусочки","/ˈpiːsɪz/","Части чего-либо."],
+ "plastic":["пластик","/ˈplæstɪk/","Искусственный полимерный материал."],
+ "identify":["определить; выявить","/aɪˈdentɪfaɪ/","Установить, что или кто перед нами."],
+ "possible":["возможный","/ˈpɒsəbəl/","То, что может произойти или существовать."],
+ "sources":["источники","/ˈsɔːsɪz/","Места или причины происхождения чего-либо."],
+ "pollution":["загрязнение","/pəˈluːʃən/","Попадание вредных веществ в окружающую среду."],
+ "researchers":["исследователи","/rɪˈsɜːtʃəz/","Люди, проводящие исследования."],
+ "findings":["результаты исследования","/ˈfaɪndɪŋz/","Выводы, полученные в ходе работы."],
+ "public":["общественный; публичный","/ˈpʌblɪk/","Открытый для всех или относящийся к обществу."],
+ "meeting":["встреча; собрание","/ˈmiːtɪŋ/","Событие, на котором люди собираются для обсуждения."],
+ "welcomes":["приветствует; приглашает","/ˈwelkəmz/","Рад принять кого-либо или что-либо."],
+ "scientists":["учёные","/ˈsaɪəntɪsts/","Люди, занимающиеся наукой."],
+ "contacting":["связываясь","/ˈkɒntæktɪŋ/","Устанавливая связь с кем-либо."],
+ "organisers":["организаторы","/ˈɔːɡənaɪzəz/","Люди, отвечающие за проведение мероприятия."],
+ "improve":["улучшить","/ɪmˈpruːv/","Сделать что-либо лучше."],
+ "understanding":["понимание","/ˌʌndəˈstændɪŋ/","Знание сути или смысла чего-либо."],
+ "coastal":["прибрежный","/ˈkəʊstəl/","Расположенный у побережья."],
+ "aims":["цели","/eɪmz/","То, чего стремятся достичь."],
+ "courage":["смелость; мужество","/ˈkʌrɪdʒ/","Способность действовать несмотря на страх."],
+ "take part":["принимать участие","/teɪk pɑːt/","Участвовать в событии или деятельности."],
+ "last year":["в прошлом году","/lɑːst jɪə/","Год, предшествующий текущему."],
+ "water samples":["пробы воды","/ˈwɔːtə ˈsɑːmpəlz/","Образцы воды, взятые для анализа."],
+ "marine research":["морские исследования","/məˈriːn rɪˈsɜːtʃ/","Научное изучение моря."],
+ "sources of pollution":["источники загрязнения","/ˈsɔːsɪz əv pəˈluːʃən/","Причины или места возникновения загрязнения."],
+ "identify pollution sources":["выявить источники загрязнения","/aɪˈdentɪfaɪ pəˈluːʃən ˈsɔːsɪz/","Найти причины или места, откуда поступают загрязняющие вещества."]
+};
+let dictionaryRequest=0;
+function closeDictionary(){const dlg=$("dictionaryDialog");if(dlg.open)dlg.close();}
+function dictionaryField(id,value){$(id).textContent=value||"Нет данных";}
+async function openDictionary(raw){
+ const term=String(raw||"").replace(/\s+/g," ").trim().slice(0,180);if(!term)return;
+ const dlg=$("dictionaryDialog");dictionaryField("dict-term",term);dictionaryField("dict-translation","Ищем перевод…");dictionaryField("dict-ipa","Загрузка…");dictionaryField("dict-definition","Загрузка…");dictionaryField("dict-status","Для новых слов нужен интернет. Перевод может зависеть от контекста.");
+ if(!dlg.open)dlg.showModal();const request=++dictionaryRequest;
+ const local=DICT_LOCAL[term.toLowerCase()];if(local){dictionaryField("dict-translation",local[0]);dictionaryField("dict-ipa",local[1]);dictionaryField("dict-definition",local[2]);dictionaryField("dict-status","Встроенный словарь · доступно без интернета");return;}
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8500);
+ try{
+  const promises=[fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(term)}&langpair=en%7Cru`,{signal:controller.signal}).then(r=>{if(!r.ok)throw Error("translate");return r.json();}).catch(()=>null)];
+  if(/^[a-z]+(?:['’-][a-z]+)*$/i.test(term))promises.push(fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(term)}`,{signal:controller.signal}).then(r=>r.ok?r.json():null).catch(()=>null));
+  const [tr,dict]=await Promise.all(promises);if(request!==dictionaryRequest||!dlg.open)return;
+  const translation=tr?.responseData?.translatedText;dictionaryField("dict-translation",translation&&translation.toLowerCase()!==term.toLowerCase()?translation:"Перевод не найден");
+  const entry=Array.isArray(dict)?dict[0]:null;dictionaryField("dict-ipa",entry?.phonetic||entry?.phonetics?.find(x=>x.text)?.text||"Транскрипция недоступна для этой фразы");
+  const meaning=entry?.meanings?.[0];const definition=meaning?.definitions?.[0]?.definition;
+  dictionaryField("dict-definition",definition?definition+" (объяснение на английском)":"Объяснение для этого выражения пока недоступно.");
+  dictionaryField("dict-status",translation?"Онлайн-перевод · проверь значение по контексту":"Нет результата. Проверь интернет или попробуй другое выражение.");
+ }catch(e){if(request===dictionaryRequest){dictionaryField("dict-translation","Не удалось получить перевод");dictionaryField("dict-ipa","Нет данных");dictionaryField("dict-definition","Подключись к интернету и попробуй ещё раз.");dictionaryField("dict-status","Онлайн-словарь временно недоступен.");}}finally{clearTimeout(timeout);}
+}
+$("dict-close").addEventListener("click",closeDictionary);
+$("dictionaryDialog").addEventListener("close",()=>{dictionaryRequest++;});
+$("dictionaryDialog").addEventListener("click",e=>{if(e.target===$("dictionaryDialog"))closeDictionary();});
 function submitDaily(){if(checkDailyRollover())return;if(selected===null)return;submitted=true;const q=question(state.session.ids[state.session.index]);const r={questionId:q.id,topic:q.topic,selected,correct:selected===q.a,date:today(),mode:"daily"};state.session.answers.push(r);state.records.push(r);const d=state.days.find(x=>x.date===today());const summary={date:today(),answered:state.session.answers.length,correct:state.session.answers.filter(x=>x.correct).length};if(d)Object.assign(d,summary);else state.days.push(summary);save();render();}
 function nextDaily(){if(checkDailyRollover())return;state.session.index++;selected=null;submitted=false;save();render();}
 function fillTopicSelect(id){const el=$(id);el.innerHTML='<option value="">Все темы</option>'+TOPICS.map(t=>`<option>${esc(t)}</option>`).join("");}
