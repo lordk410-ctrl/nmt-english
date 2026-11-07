@@ -1,6 +1,6 @@
 (() => {
 "use strict";
-const VERSION="1.9.2", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
+const VERSION="1.10.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
 const TOPICS=["Грамматика","Лексика","Use of English","Чтение"], $=id=>document.getElementById(id);
 const freshSession=date=>({date,ids:shuffle(QUESTIONS.map(q=>q.id),hash(date)).slice(0,20),index:0,answers:[]});
 // Учебные сутки идут по московскому времени: с 03:00 до 02:59 следующего дня.
@@ -15,12 +15,12 @@ function today(){
 }
 function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 function shuffle(items,seed){let x=seed||1,a=[...items];const rand=()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return(x>>>0)/4294967296;};for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function load(){try{const s=JSON.parse(localStorage.getItem(STORAGE_KEY));if(s&&s.session){if(s.session.date!==today())s.session=freshSession(today());s.records=s.records||[];s.days=s.days||[];return s;}}catch(e){}return{session:freshSession(today()),records:[],days:[]};}
+function load(){try{const s=JSON.parse(localStorage.getItem(STORAGE_KEY));if(s&&s.session){if(s.session.date!==today())s.session=freshSession(today());s.records=s.records||[];s.days=s.days||[];s.vocabulary=s.vocabulary||{};s.lessonProgress=s.lessonProgress||{};return s;}}catch(e){}return{session:freshSession(today()),records:[],days:[],vocabulary:{},lessonProgress:{}};}
 let state=load(), selected=null, submitted=false, practice={ids:[],index:0,selected:null,submitted:false};
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function question(id){return QUESTIONS.find(q=>q.id===id);}
-function activate(view){document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===view));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));if(view==="bank")renderBank();if(view==="practice")renderPractice();if(view==="home")renderHome();window.scrollTo({top:0,behavior:"smooth"});}
+function activate(view){document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===view));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===`view-${view}`));if(view==="bank")renderBank();if(view==="practice")renderPractice();if(view==="home")renderHome();if(view==="learn")renderLearn();window.scrollTo({top:0,behavior:"smooth"});}
 const FACTS=[
 "В английском алфавите 26 букв, но примерно 44 звука. Поэтому одна и та же буква может звучать по-разному.",
 "Слово «queue» произносится почти как одна буква Q. Остальные буквы словно стоят в очереди.",
@@ -111,15 +111,24 @@ const DICT_LOCAL={
  "goal":["цель; задача; гол","/ɡəʊl/","Результат, которого хотят достичь; в спорте — гол."],
  "herbs":["травы; зелень; лекарственные травы","/hɜːbz/","Растения, используемые в кулинарии, медицине или для аромата."]
 };
+const QUESTION_VOCAB={};
+QUESTIONS.forEach(q=>{
+ const v=q.vocab;
+ if(Array.isArray(v)&&v.length>=2&&typeof v[0]==="string"&&typeof v[1]==="string"&&/[A-Za-z]/.test(v[0])){
+  const key=v[0].toLowerCase().trim();
+  if(key&&!QUESTION_VOCAB[key])QUESTION_VOCAB[key]=v.slice(1).filter(x=>typeof x==="string").join("; ");
+ }
+});
 let dictionaryRequest=0;
 function closeDictionary(){const dlg=$("dictionaryDialog");if(dlg.open)dlg.close();}
 function dictionaryField(id,value){$(id).textContent=value||"Нет данных";}
 async function openDictionary(raw){
  const term=String(raw||"").replace(/\s+/g," ").trim().slice(0,180);if(!term)return;
- const dlg=$("dictionaryDialog");dictionaryField("dict-term",term);dictionaryField("dict-translation","Ищем варианты перевода…");dictionaryField("dict-ipa","Загружаем транскрипцию…");dictionaryField("dict-definition","Подбираем объяснение…");dictionaryField("dict-status","Для новых слов требуется интернет. Значения показываются с учётом доступных словарных данных.");
- if(!dlg.open)dlg.showModal();const request=++dictionaryRequest;
+ dictionaryCurrentTerm=term;
+ const dlg=$("dictionaryDialog");dictionaryField("dict-term",term);dictionaryField("dict-translation",QUESTION_VOCAB[term.toLowerCase()]||"Ищем варианты перевода…");dictionaryField("dict-ipa","Загружаем транскрипцию…");dictionaryField("dict-definition","Подбираем объяснение…");dictionaryField("dict-status","Для новых слов требуется интернет. Значения показываются с учётом доступных словарных данных.");
+ setDictSaveButton();if(!state.vocabulary?.[term.toLowerCase()])$("dict-save").disabled=true;if(!dlg.open)dlg.showModal();const request=++dictionaryRequest;
  const local=DICT_LOCAL[term.toLowerCase()];
- if(local){dictionaryField("dict-translation",local[0]);dictionaryField("dict-ipa",local[1]);dictionaryField("dict-definition",local[2]);dictionaryField("dict-status","Встроенный словарь · доступно без интернета");return;}
+ if(local){dictionaryField("dict-translation",local[0]);dictionaryField("dict-ipa",local[1]);dictionaryField("dict-definition",local[2]);dictionaryField("dict-status","Встроенный словарь · доступно без интернета");setDictSaveButton();return;}
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
  const fetchJson=(url)=>fetch(url,{signal:controller.signal}).then(r=>r.ok?r.json():null).catch(()=>null);
  try{
@@ -132,6 +141,7 @@ async function openDictionary(raw){
   if(request!==dictionaryRequest||!dlg.open)return;
   const translations=[];
   const addTranslation=value=>{if(typeof value!=="string")return;value=value.replace(/&quot;/g,'"').replace(/&#39;/g,"'").trim();if(value&&value.toLowerCase()!==term.toLowerCase()&&!translations.some(x=>x.toLowerCase()===value.toLowerCase()))translations.push(value);};
+  addTranslation(QUESTION_VOCAB[term.toLowerCase()]);
   addTranslation(tr?.responseData?.translatedText);
   (tr?.matches||[]).sort((a,b)=>(Number(b.match)||0)-(Number(a.match)||0)).forEach(m=>addTranslation(m.translation));
   dictionaryField("dict-translation",translations.length?translations.slice(0,7).join("; "):"Перевод не найден");
@@ -149,12 +159,136 @@ async function openDictionary(raw){
    explanation=defTr?.responseData?.translatedText||explanation+" (объяснение на английском)";
    dictionaryField("dict-definition",explanation);
   }else dictionaryField("dict-definition","Подробное объяснение для этой фразы пока недоступно.");
-  dictionaryField("dict-status",translations.length?"Онлайн-словарь · варианты перевода собраны из доступных совпадений":"Нет результата перевода. Проверь интернет или попробуй выделить слово отдельно.");
- }catch(e){if(request===dictionaryRequest){dictionaryField("dict-translation","Не удалось получить перевод");dictionaryField("dict-ipa","Транскрипция временно недоступна");dictionaryField("dict-definition","Подключись к интернету и попробуй ещё раз.");dictionaryField("dict-status","Онлайн-словарь временно недоступен.");}}finally{clearTimeout(timeout);}
+  dictionaryField("dict-status",translations.length?"Словарная база NotiTest и онлайн-источники · проверь значение по контексту":"Нет результата перевода. Проверь интернет или попробуй выделить слово отдельно.");
+  setDictSaveButton();
+ }catch(e){if(request===dictionaryRequest){dictionaryField("dict-translation",QUESTION_VOCAB[term.toLowerCase()]||"Перевод временно недоступен");dictionaryField("dict-ipa","Транскрипция временно недоступна без словарного источника");dictionaryField("dict-definition","Попробуй подключиться к интернету, чтобы получить объяснение.");dictionaryField("dict-status","Онлайн-источник временно недоступен. Если перевод есть в банке заданий, его можно сохранить.");setDictSaveButton();}}finally{clearTimeout(timeout);}
 }
 $("dict-close").addEventListener("click",closeDictionary);
+$("dict-save").addEventListener("click",saveCurrentDictionaryWord);
 $("dictionaryDialog").addEventListener("close",()=>{dictionaryRequest++;});
 $("dictionaryDialog").addEventListener("click",e=>{if(e.target===$("dictionaryDialog"))closeDictionary();});
+
+const GRAMMAR_LESSONS=[
+{id:"present-simple",title:"Present Simple",level:"A1",subtitle:"Привычки, факты и регулярные действия",theory:["Используй Present Simple для привычек, расписаний и общеизвестных фактов.","В утверждении с he / she / it обычно добавляй -s или -es к смысловому глаголу.","В вопросах и отрицаниях используй do / does; после does глагол возвращается к начальной форме."],examples:[["I study English every day.","Я изучаю английский каждый день."],["She works in a library.","Она работает в библиотеке."],["Does he like coffee?","Он любит кофе?"]],items:[
+{q:"My brother ___ football every Saturday.",o:["play","plays","is play","playing"],a:1,e:"С подлежащим my brother (he) в Present Simple к глаголу добавляется -s."},
+{q:"___ they live near the school?",o:["Does","Are","Do","Is"],a:2,e:"С подлежащим they в вопросе Present Simple используется do."},
+{q:"Anna doesn't ___ meat.",o:["eats","eating","ate","eat"],a:3,e:"После doesn't используется начальная форма глагола без -s."}]},
+{id:"present-continuous",title:"Present Continuous",level:"A1–A2",subtitle:"Действия, происходящие сейчас",theory:["Present Continuous описывает действие, происходящее сейчас или в текущий период.","Формула: am / is / are + глагол с окончанием -ing.","Не забывай выбирать форму be по подлежащему."],examples:[["I am reading now.","Я сейчас читаю."],["They are studying for an exam.","Они готовятся к экзамену."],["Is she sleeping?","Она спит?"]],items:[
+{q:"Look! The children ___ in the garden.",o:["play","plays","are playing","is playing"],a:2,e:"The children означает they, поэтому нужна форма are + playing."},
+{q:"I ___ my homework at the moment.",o:["do","am doing","does","did"],a:1,e:"At the moment указывает на действие сейчас: am doing."},
+{q:"He ___ TV now.",o:["isn't watching","don't watch","aren't watching","not watches"],a:0,e:"С he используется isn't + глагол с -ing."}]},
+{id:"past-simple",title:"Past Simple",level:"A2",subtitle:"Завершённые действия в прошлом",theory:["Past Simple используется для завершённых действий в прошлом.","Правильные глаголы обычно получают окончание -ed; неправильные имеют отдельную форму.","В вопросах и отрицаниях используй did, а после did ставь начальную форму глагола."],examples:[["We visited London last year.","Мы посетили Лондон в прошлом году."],["She went home early.","Она рано пошла домой."],["Did you see him?","Ты видел его?"]],items:[
+{q:"They ___ the museum yesterday.",o:["visit","visited","have visited","are visiting"],a:1,e:"Yesterday обозначает завершённое действие в прошлом; visited это Past Simple."},
+{q:"Did you ___ the message?",o:["received","receiving","receive","receives"],a:2,e:"После did используется начальная форма receive."},
+{q:"He ___ to school last Monday.",o:["doesn't go","didn't went","not go","didn't go"],a:3,e:"Отрицание Past Simple: didn't + начальная форма go."}]},
+{id:"present-perfect",title:"Present Perfect",level:"B1",subtitle:"Опыт и результат, связанный с настоящим",theory:["Present Perfect связывает прошлое с настоящим: важен опыт или результат сейчас.","Формула: have / has + третья форма глагола (V3).","Не используй Present Perfect с завершённым временем вроде yesterday или last year."],examples:[["I have lost my keys.","Я потерял ключи (и сейчас их нет)."],["She has never been to Spain.","Она никогда не была в Испании."],["We saw him yesterday.","Мы видели его вчера."]],items:[
+{q:"She ___ already finished her project.",o:["have","has","is","did"],a:1,e:"С she используется has; Present Perfect строится has + V3."},
+{q:"I ___ this film twice.",o:["saw","have seen","am seeing","see"],a:1,e:"Опыт без указания завершённого времени: have seen."},
+{q:"We ___ to Kyiv last weekend.",o:["have gone","go","went","has gone"],a:2,e:"Last weekend это завершённое время в прошлом, поэтому нужен Past Simple went."}]},
+{id:"articles",title:"Артикли a, an и the",level:"A1–B1",subtitle:"Как говорить о предметах и людях",theory:["A / an употребляются с исчисляемым существительным в единственном числе, когда предмет упоминается впервые или не конкретизирован.","An ставится перед гласным звуком, а не просто перед гласной буквой.","The указывает на конкретный или уже известный собеседникам предмет."],examples:[["I saw a dog. The dog was friendly.","Я увидел собаку. Эта собака была дружелюбной."],["She is an engineer.","Она инженер."],["The sun is bright.","Солнце яркое."]],items:[
+{q:"I need ___ umbrella because it is raining.",o:["a","an","the","no article"],a:1,e:"Umbrella начинается с гласного звука, поэтому нужен an."},
+{q:"I bought a book. ___ book is about space.",o:["A","An","The","No article"],a:2,e:"При повторном упоминании уже известной книги используется the."},
+{q:"My sister is ___ doctor.",o:["a","an","the","no article"],a:0,e:"Профессия с исчисляемым существительным в единственном числе обычно требует a."}]},
+{id:"prepositions",title:"Предлоги времени: in, on, at",level:"A2",subtitle:"Выбираем предлог для даты и времени",theory:["At используется с точным временем: at 7 o'clock, at noon.","On используется с днями и конкретными датами: on Monday, on 5 May.","In используется с месяцами, годами, сезонами и длительными периодами: in July, in 2026."],examples:[["at 8:30","в 8:30"],["on Friday","в пятницу"],["in September","в сентябре"]],items:[
+{q:"Our lesson starts ___ 9 o'clock.",o:["in","on","at","by"],a:2,e:"С точным временем используется at."},
+{q:"My birthday is ___ May.",o:["at","in","on","to"],a:1,e:"С месяцами используется in."},
+{q:"We have a meeting ___ Tuesday.",o:["on","at","in","for"],a:0,e:"С днями недели используется on."}]},
+{id:"some-any",title:"Some и any",level:"A2",subtitle:"Количество в вопросах и утверждениях",theory:["Some обычно используется в утвердительных предложениях.","Any часто используется в вопросах и отрицаниях.","Some также возможно в предложениях-вопросах, когда мы предлагаем что-либо или ожидаем согласия."],examples:[["There are some apples.","Есть несколько яблок."],["We don't have any milk.","У нас нет молока."],["Would you like some tea?","Хотите чаю?"]],items:[
+{q:"There are ___ biscuits on the plate.",o:["any","some","much","a"],a:1,e:"В обычном утвердительном предложении с исчисляемым множественным числом обычно используется some."},
+{q:"We haven't got ___ eggs.",o:["some","a","any","many of"],a:2,e:"В отрицательном предложении используется any."},
+{q:"Would you like ___ coffee?",o:["some","any","many","an"],a:0,e:"В предложении-предложении вежливо используется some."}]},
+{id:"modals",title:"Must и have to",level:"B1",subtitle:"Обязанность и необходимость",theory:["Must часто выражает сильную обязанность или личное убеждение говорящего.","Have to часто описывает необходимость, связанную с правилами или обстоятельствами.","Mustn't означает запрет, а don't have to означает отсутствие необходимости. Это разные значения."],examples:[["You must wear a seat belt.","Ты обязан пристегнуть ремень."],["I have to get up early for work.","Мне приходится рано вставать на работу."],["You don't have to come early.","Тебе необязательно приходить рано."]],items:[
+{q:"You ___ smoke here. It is forbidden.",o:["don't have to","mustn't","must","have to"],a:1,e:"Mustn't выражает запрет."},
+{q:"We ___ wear a uniform at this school; it is a rule.",o:["has to","mustn't","have to","doesn't have to"],a:2,e:"С we используется have to для обязанности по правилу."},
+{q:"You ___ bring food. We have plenty.",o:["mustn't","don't have to","has to","must"],a:1,e:"Don't have to означает, что необходимости нет."}]}
+];
+let learnSection="vocab", reviewQueue=[], reviewIndex=0, reviewRevealed=false, lessonState=null, dictionaryCurrentTerm="";
+function ensureLearningState(){
+ state.vocabulary=state.vocabulary&&typeof state.vocabulary==="object"?state.vocabulary:{};
+ state.lessonProgress=state.lessonProgress&&typeof state.lessonProgress==="object"?state.lessonProgress:{};
+}
+function dayKeyPlus(key,days){const [y,m,d]=key.split("-").map(Number),dt=new Date(Date.UTC(y,m-1,d+days));return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,"0")}-${String(dt.getUTCDate()).padStart(2,"0")}`;}
+function isDueWord(w){return !w.dueAt||w.dueAt<=Date.now();}
+function wordCount(){return Object.keys(state.vocabulary).length;}
+function dueWords(){return Object.values(state.vocabulary).filter(isDueWord).sort((a,b)=>(a.dueAt||0)-(b.dueAt||0));}
+function addVocabularyWord(term,translation,ipa,definition){
+ ensureLearningState();const key=String(term||"").toLowerCase().trim();if(!key)return false;
+ if(state.vocabulary[key])return false;
+ state.vocabulary[key]={term,translation:translation||"Перевод уточняется",ipa:ipa||"Транскрипция уточняется",definition:definition||"Объяснение пока не добавлено.",createdAt:Date.now(),dueAt:Date.now(),interval:0,reps:0,lapses:0,lastRating:null};
+ save();return true;
+}
+function renderLearn(){
+ ensureLearningState();
+ const tabs=[["vocab","Мой словарь"],["review","Повторение"],["grammar","Грамматика"]];
+ $("learn-subnav").innerHTML=tabs.map(([id,label])=>`<button class="learn-subtab ${learnSection===id?"active":""}" data-learn-section="${id}">${label}</button>`).join("");
+ $("learn-subnav").querySelectorAll("[data-learn-section]").forEach(b=>b.addEventListener("click",()=>{learnSection=b.dataset.learnSection;renderLearn();}));
+ if(learnSection==="vocab")renderVocabulary();
+ else if(learnSection==="review")renderReview();
+ else renderGrammar();
+}
+function renderVocabulary(){
+ const words=Object.values(state.vocabulary).sort((a,b)=>b.createdAt-a.createdAt),due=dueWords().length;
+ $("learn-content").innerHTML=`<div class="learn-summary"><div><strong>${words.length}</strong><span>слов сохранено</span></div><div><strong>${due}</strong><span>пора повторить</span></div></div><div class="learn-actions"><button class="primary-button" id="startWordReview" ${due?"":"disabled"}>Повторить слова · ${due}</button></div>${words.length?`<div class="vocab-list">${words.map(w=>`<article class="vocab-item"><button class="vocab-open" data-vocab-open="${esc(w.term)}"><strong>${esc(w.term)}</strong><span>${esc(w.translation)}</span><small>${esc(w.ipa)}</small></button><button class="vocab-delete" data-vocab-delete="${esc(w.term)}" aria-label="Удалить ${esc(w.term)}">×</button></article>`).join("")}</div>`:'<div class="empty-state">Здесь пока пусто. Открой словарь у любого английского слова и нажми «Добавить в мой словарь».</div>'}`;
+ $("startWordReview").addEventListener("click",startWordReview);
+ $("learn-content").querySelectorAll("[data-vocab-open]").forEach(b=>b.addEventListener("click",()=>openDictionary(b.dataset.vocabOpen)));
+ $("learn-content").querySelectorAll("[data-vocab-delete]").forEach(b=>b.addEventListener("click",()=>{delete state.vocabulary[b.dataset.vocabDelete.toLowerCase()];save();renderVocabulary();}));
+}
+function startWordReview(){reviewQueue=dueWords().map(w=>w.term.toLowerCase());reviewIndex=0;reviewRevealed=false;learnSection="review";renderLearn();}
+function renderReview(){
+ const content=$("learn-content");
+ if(!reviewQueue.length){const due=dueWords();if(!due.length){content.innerHTML=`<div class="empty-state">Все слова повторены. Новые карточки появятся здесь по расписанию.</div><button class="secondary-button" id="backToVocab">Мой словарь</button>`;content.querySelector("#backToVocab").onclick=()=>{learnSection="vocab";renderLearn();};return;}reviewQueue=due.map(w=>w.term.toLowerCase());reviewIndex=0;}
+ if(reviewIndex>=reviewQueue.length){content.innerHTML=`<article class="completion-card"><div class="completion-icon">✓</div><h2>Повторение завершено</h2><p class="muted">Карточек обработано: ${reviewQueue.length}</p><button class="primary-button" id="reviewAgain">Вернуться к словарю</button></article>`;content.querySelector("#reviewAgain").onclick=()=>{reviewQueue=[];learnSection="vocab";renderLearn();};return;}
+ const w=state.vocabulary[reviewQueue[reviewIndex]];
+ if(!w){reviewIndex++;renderReview();return;}
+ content.innerHTML=`<article class="review-card"><div class="review-meta"><span>КАРТОЧКА ${reviewIndex+1} ИЗ ${reviewQueue.length}</span><span>${w.reps||0} повторений</span></div><h2>${esc(w.term)}</h2><p class="review-ipa">${esc(w.ipa)}</p>${reviewRevealed?`<div class="review-answer"><h3>${esc(w.translation)}</h3><p>${esc(w.definition)}</p></div>`:'<p class="muted">Вспомни перевод, затем открой ответ.</p>'}<button class="secondary-button full" id="revealWord" ${reviewRevealed?"hidden":""}>Показать ответ</button>${reviewRevealed?`<div class="rating-buttons"><button data-rating="again">Не помню</button><button data-rating="hard">Трудно</button><button data-rating="good">Хорошо</button><button data-rating="easy">Легко</button></div>`:""}</article>`;
+ const reveal=content.querySelector("#revealWord");if(reveal)reveal.onclick=()=>{reviewRevealed=true;renderReview();};
+ content.querySelectorAll("[data-rating]").forEach(b=>b.addEventListener("click",()=>rateWord(w.term,b.dataset.rating)));
+}
+function rateWord(term,rating){
+ const key=term.toLowerCase(),w=state.vocabulary[key];if(!w)return;
+ const now=Date.now();w.reps=(w.reps||0)+1;w.lastRating=rating;
+ if(rating==="again"){w.lapses=(w.lapses||0)+1;w.interval=0;w.dueAt=now+10*60*1000;}
+ else if(rating==="hard"){w.interval=Math.max(1,Math.round((w.interval||1)*1.2));w.dueAt=now+w.interval*86400000;}
+ else if(rating==="good"){w.interval=w.interval?Math.max(2,Math.round(w.interval*2.2)):1;w.dueAt=now+w.interval*86400000;}
+ else{w.interval=w.interval?Math.max(4,Math.round(w.interval*2.8)):4;w.dueAt=now+w.interval*86400000;}
+ save();reviewIndex++;reviewRevealed=false;renderReview();
+}
+function renderGrammar(){
+ const content=$("learn-content");
+ if(lessonState){renderLesson();return;}
+ content.innerHTML=`<div class="lesson-intro"><h2>Мини-уроки грамматики</h2><p class="muted">Короткое объяснение, примеры и три упражнения после каждого урока.</p></div><div class="lesson-list">${GRAMMAR_LESSONS.map(l=>{const p=state.lessonProgress[l.id];return `<button class="lesson-card" data-lesson="${l.id}"><span class="lesson-level">${l.level}</span><strong>${l.title}</strong><span>${l.subtitle}</span><small>${p?`Последний результат: ${p.correct}/${p.total}`:"3 практических задания"}</small></button>`;}).join("")}</div>`;
+ content.querySelectorAll("[data-lesson]").forEach(b=>b.addEventListener("click",()=>{lessonState={id:b.dataset.lesson,index:-1,selected:null,answers:[]};renderGrammar();}));
+}
+function renderLesson(){
+ const l=GRAMMAR_LESSONS.find(x=>x.id===lessonState.id),content=$("learn-content");
+ if(lessonState.index===-1){
+  content.innerHTML=`<button class="text-back" id="lessonBack">← Все уроки</button><article class="lesson-detail"><span class="lesson-level">${l.level}</span><h2>${l.title}</h2><p class="muted">${l.subtitle}</p><h3>Коротко о правиле</h3><ul>${l.theory.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><h3>Примеры</h3><div class="lesson-examples">${l.examples.map(([en,ru])=>`<div><strong>${esc(en)}</strong><span>${esc(ru)}</span></div>`).join("")}</div><button class="primary-button full" id="beginLesson">Перейти к упражнениям</button></article>`;
+  content.querySelector("#lessonBack").onclick=()=>{lessonState=null;renderGrammar();};content.querySelector("#beginLesson").onclick=()=>{lessonState.index=0;lessonState.selected=null;renderLesson();};return;
+ }
+ if(lessonState.index>=l.items.length){
+  const correct=lessonState.answers.filter(Boolean).length;state.lessonProgress[l.id]={correct,total:l.items.length,completedAt:Date.now()};save();
+  content.innerHTML=`<article class="completion-card"><div class="completion-icon">✓</div><h2>Урок завершён</h2><div class="score">${correct} / ${l.items.length}</div><p class="muted">Правильных ответов</p><button class="primary-button full" id="lessonFinish">К списку уроков</button></article>`;
+  content.querySelector("#lessonFinish").onclick=()=>{lessonState=null;renderGrammar();};return;
+ }
+ const item=l.items[lessonState.index],answered=lessonState.selected!==null;
+ content.innerHTML=`<button class="text-back" id="lessonBack">← К уроку</button><div class="lesson-progress"><span>Упражнение ${lessonState.index+1} из ${l.items.length}</span><div class="mini-track"><div class="mini-fill" style="width:${(lessonState.index+1)/l.items.length*100}%"></div></div></div><article class="lesson-exercise"><h2>${esc(item.q)}</h2><div class="lesson-options">${item.o.map((o,i)=>`<button class="lesson-option ${answered&&lessonState.selected===i?"selected":""} ${answered&&i===item.a?"correct":""} ${answered&&lessonState.selected===i&&i!==item.a?"wrong":""}" data-lesson-choice="${i}" ${answered?"disabled":""}>${esc(o)}</button>`).join("")}</div>${answered?`<div class="feedback show"><p>${esc(item.e)}</p></div>`:""}<button class="primary-button full" id="lessonAction" ${answered?"":"disabled"}>${lessonState.index===l.items.length-1?"Завершить урок":"Следующее упражнение"}</button></article>`;
+ content.querySelector("#lessonBack").onclick=()=>{lessonState.index=-1;lessonState.selected=null;renderLesson();};
+ content.querySelectorAll("[data-lesson-choice]").forEach(b=>b.onclick=()=>{lessonState.selected=Number(b.dataset.lessonChoice);lessonState.answers[lessonState.index]=lessonState.selected===item.a;renderLesson();});
+ content.querySelector("#lessonAction").onclick=()=>{lessonState.index++;lessonState.selected=null;renderLesson();};
+}
+function setDictSaveButton(){
+ const button=$("dict-save");if(!button)return;
+ const saved=!!state.vocabulary?.[dictionaryCurrentTerm.toLowerCase()];
+ button.textContent=saved?"✓ В моём словаре":"＋ Добавить в мой словарь";
+ button.disabled=saved;
+}
+function saveCurrentDictionaryWord(){
+ const term=dictionaryCurrentTerm;if(!term)return;
+ const ok=addVocabularyWord(term,$("dict-translation").textContent,$("dict-ipa").textContent,$("dict-definition").textContent);
+ setDictSaveButton();
+ dictionaryField("dict-status",ok?"Слово добавлено в личный словарь.":"Это слово уже есть в личном словаре.");
+}
+
 function submitDaily(){if(checkDailyRollover())return;if(selected===null)return;submitted=true;const q=question(state.session.ids[state.session.index]);const r={questionId:q.id,topic:q.topic,selected,correct:selected===q.a,date:today(),mode:"daily"};state.session.answers.push(r);state.records.push(r);const d=state.days.find(x=>x.date===today());const summary={date:today(),answered:state.session.answers.length,correct:state.session.answers.filter(x=>x.correct).length};if(d)Object.assign(d,summary);else state.days.push(summary);save();render();}
 function nextDaily(){if(checkDailyRollover())return;state.session.index++;selected=null;submitted=false;save();render();}
 function fillTopicSelect(id){const el=$(id);el.innerHTML='<option value="">Все темы</option>'+TOPICS.map(t=>`<option>${esc(t)}</option>`).join("");}

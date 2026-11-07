@@ -75,3 +75,56 @@ footer{padding-top:30px}
 
 /* v1.9.2: clickable English words in question text, options and feedback */
 .dict-word{cursor:pointer;border-bottom:1px dotted var(--navy2);-webkit-tap-highlight-color:transparent}.dict-word:active{opacity:.7}
+
+
+/* v1.10.0: personal vocabulary, spaced review and grammar mini-lessons */
+.learn-subnav{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;margin-bottom:12px;scrollbar-width:none}
+.learn-subtab{flex:1;min-width:max-content;border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:var(--white);color:var(--muted);font-size:12px;font-weight:750}
+.learn-subtab.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.learn-content{display:grid;gap:13px}
+.learn-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.learn-summary>div{display:grid;gap:4px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--white)}
+.learn-summary strong{font:800 27px Manrope;color:var(--navy)}
+.learn-summary span{font-size:11px;color:var(--muted)}
+.learn-actions{display:flex;gap:8px}.learn-actions .primary-button{width:100%}
+.vocab-list,.lesson-list{display:grid;gap:9px}
+.vocab-item{display:flex;align-items:center;gap:8px;padding:13px;border:1px solid var(--line);border-radius:15px;background:var(--white)}
+.vocab-open{display:grid;gap:4px;text-align:left;flex:1;min-width:0;background:transparent}
+.vocab-open strong{font-size:17px;color:var(--ink)}
+.vocab-open span{font-size:13px;color:var(--ink)}
+.vocab-open small{font-size:11px;color:var(--muted)}
+.vocab-delete{width:34px;height:34px;border-radius:10px;background:var(--surface,var(--line));color:var(--muted);font-size:20px;flex:none}
+.review-card,.lesson-detail,.lesson-exercise{padding:20px;border:1px solid var(--line);border-radius:20px;background:var(--white);box-shadow:var(--shadow)}
+.review-meta,.lesson-progress{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:11px;letter-spacing:.5px}
+.review-card h2{font:800 32px Manrope;color:var(--navy);margin:25px 0 5px;overflow-wrap:anywhere}
+.review-ipa{color:var(--muted);margin-bottom:25px}
+.review-answer{padding:15px;margin:15px 0;border-radius:14px;background:color-mix(in srgb,var(--navy2) 8%,var(--white))}
+.review-answer h3{font-size:20px;color:var(--navy);margin-bottom:7px}
+.review-answer p{font-size:13px;line-height:1.5}
+.rating-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}
+.rating-buttons button{padding:13px 8px;border:1px solid var(--line);border-radius:12px;background:var(--white);font-size:12px;font-weight:750;color:var(--ink)}
+.rating-buttons button[data-rating="again"]{border-color:#d98a8a}.rating-buttons button[data-rating="easy"]{border-color:#75b99a}
+.lesson-card{display:grid;gap:8px;text-align:left;padding:17px;border:1px solid var(--line);border-radius:16px;background:var(--white);color:var(--ink)}
+.lesson-card strong{font:800 19px Manrope;color:var(--navy)}
+.lesson-card>span:not(.lesson-level){font-size:12px;color:var(--muted)}
+.lesson-card small{font-size:11px;color:var(--navy2)}
+.lesson-level{justify-self:start;padding:5px 9px;border-radius:20px;background:color-mix(in srgb,var(--navy2) 12%,var(--white));color:var(--navy);font-size:10px;font-weight:800}
+.lesson-detail h2{font:800 27px Manrope;color:var(--navy);margin:12px 0 5px}
+.lesson-detail h3{font-size:15px;margin:22px 0 9px}
+.lesson-detail ul{padding-left:20px;display:grid;gap:9px;font-size:13px;line-height:1.55}
+.lesson-examples{display:grid;gap:8px}
+.lesson-examples>div{display:grid;gap:4px;padding:12px;border-radius:12px;background:color-mix(in srgb,var(--navy2) 7%,var(--white))}
+.lesson-examples strong{font-size:13px}.lesson-examples span{font-size:12px;color:var(--muted)}
+.lesson-detail .primary-button{margin-top:22px}
+.lesson-progress{display:grid;gap:8px;margin:0 0 12px}
+.lesson-exercise h2{font:750 20px/1.4 Manrope;margin:8px 0 17px}
+.lesson-options{display:grid;gap:8px}
+.lesson-option{padding:13px;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--white);color:var(--ink);font-size:14px}
+.lesson-option.selected{border-color:var(--navy2);background:color-mix(in srgb,var(--navy2) 10%,var(--white))}
+.lesson-option.correct{border-color:#55a67d;background:rgba(85,166,125,.12)}
+.lesson-option.wrong{border-color:#d47777;background:rgba(212,119,119,.1)}
+.lesson-option:disabled{opacity:1}
+.lesson-exercise .primary-button{margin-top:15px}
+.text-back{justify-self:start;background:transparent;color:var(--navy);font-weight:750;padding:5px 0}
+#dict-save{margin-top:13px}
+@media(max-width:420px){.tabs{gap:3px}.tab{padding:11px 6px;font-size:10px}.learn-subtab{padding:10px 11px;font-size:11px}}

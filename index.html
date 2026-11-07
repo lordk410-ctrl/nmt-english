@@ -4,13 +4,13 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#6d5ce7"><meta name="description" content="NotiTest — развивающие тесты и ежедневная практика для учёбы.">
 <link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icons/icon-192.png">
-<link rel="stylesheet" href="./styles.css?v=1.9.2"><title>NotiTest</title>
+<link rel="stylesheet" href="./styles.css?v=1.10.0"><title>NotiTest</title>
 </head>
 <body>
 <div class="app-shell">
 <header class="topbar"><button class="brand-mark" id="homeButton" aria-label="На главную">N<span class="brand-spark">✦</span></button><div class="brand-copy"><p class="eyebrow">УЧИСЬ · ПРОБУЙ · РАСТИ</p><h1>NotiTest</h1><span class="brand-caption">Тесты для развития каждый день</span></div><button class="icon-button" id="installHelp" aria-label="Как установить">＋</button></header>
 <nav class="tabs" aria-label="Разделы">
-<button class="tab" data-view="today">Сегодня</button><button class="tab" data-view="bank">Все вопросы</button><button class="tab" data-view="practice">Практика</button><button class="tab" data-view="stats">Прогресс</button>
+<button class="tab" data-view="today">Сегодня</button><button class="tab" data-view="bank">Все вопросы</button><button class="tab" data-view="practice">Практика</button><button class="tab" data-view="stats">Прогресс</button><button class="tab" data-view="learn">Учиться</button>
 </nav>
 <main>
 <section id="view-home" class="view active">
@@ -40,10 +40,15 @@
 <article class="panel"><h3>Медали</h3><div id="achievements" class="achievement-grid"></div></article><article class="panel"><h3>Последние учебные дни</h3><div id="day-history" class="history-list"></div></article><article class="panel"><h3>Мои темы</h3><div id="topic-list" class="topic-list"></div></article>
 <div class="panel settings"><h3>Оформление</h3><label for="theme-select">Тема приложения</label><select id="theme-select"><option value="system">Как на iPhone</option><option value="light">Светлая</option><option value="dark">Тёмная</option></select></div>
 </section>
+<section id="view-learn" class="view">
+<div class="section-heading"><p class="eyebrow">АНГЛИЙСКИЙ КАЖДЫЙ ДЕНЬ</p><h2>Учиться</h2><p class="muted">Сохраняй полезные слова, повторяй их вовремя и разбирай грамматику небольшими уроками.</p></div>
+<div class="learn-subnav" id="learn-subnav"></div>
+<div id="learn-content" class="learn-content"></div>
+</section>
 </main>
-<footer><span>Любопытство сегодня. Уверенность завтра.</span><span class="footer-sub">Развивающие тесты и практика для учёбы.</span><span class="version">NotiTest · v1.9.2</span><span class="footer-sub">Обновлено: 7 ноября 2026</span></footer>
+<footer><span>Любопытство сегодня. Уверенность завтра.</span><span class="footer-sub">Развивающие тесты и практика для учёбы.</span><span class="version">NotiTest · v1.10.0</span><span class="footer-sub">Обновлено: 7 ноября 2026</span></footer>
 </div>
 <dialog id="installDialog"><div class="dialog-head"><p class="eyebrow">УСТАНОВКА НА IPHONE</p><button class="close-button" id="closeInstall">×</button></div><h2>Добавь NotiTest на экран «Домой»</h2><ol><li>Открой сайт в Safari.</li><li>Нажми «Поделиться».</li><li>Выбери «На экран Домой».</li><li>Подтверди добавление.</li></ol><p class="muted small">Для офлайн-режима сначала открой приложение при подключённом интернете.</p><button class="primary-button full" id="doneInstall">Понятно</button></dialog>
-<dialog id="dictionaryDialog" aria-labelledby="dict-term" class="dictionary-dialog"><div class="dialog-head"><p class="eyebrow">📖 СЛОВАРЬ</p><button type="button" class="close-button" id="dict-close" aria-label="Закрыть словарь">×</button></div><h2 id="dict-term"></h2><p class="dict-ipa" id="dict-ipa"></p><p class="dict-label">Перевод</p><p class="dict-translation" id="dict-translation"></p><p class="dict-label">Объяснение</p><p class="dict-definition" id="dict-definition"></p><p class="dict-status" id="dict-status"></p><button type="button" class="primary-button full" onclick="document.getElementById('dictionaryDialog').close()">Вернуться к тесту</button></dialog>
-<script src="./questions.js?v=1.9.2"></script><script src="./app.js?v=1.9.2"></script>
+<dialog id="dictionaryDialog" aria-labelledby="dict-term" class="dictionary-dialog"><div class="dialog-head"><p class="eyebrow">📖 СЛОВАРЬ</p><button type="button" class="close-button" id="dict-close" aria-label="Закрыть словарь">×</button></div><h2 id="dict-term"></h2><p class="dict-ipa" id="dict-ipa"></p><p class="dict-label">Перевод</p><p class="dict-translation" id="dict-translation"></p><p class="dict-label">Объяснение</p><p class="dict-definition" id="dict-definition"></p><p class="dict-status" id="dict-status"></p><button type="button" class="secondary-button full" id="dict-save">＋ Добавить в мой словарь</button><button type="button" class="primary-button full" onclick="document.getElementById('dictionaryDialog').close()">Вернуться к тесту</button></dialog>
+<script src="./questions.js?v=1.10.0"></script><script src="./app.js?v=1.10.0"></script>
 </body></html>
