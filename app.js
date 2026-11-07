@@ -1,6 +1,6 @@
 (() => {
 "use strict";
-const VERSION="1.9.0", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
+const VERSION="1.9.1", QUESTIONS=Array.isArray(window.NMT_QUESTIONS)?window.NMT_QUESTIONS:[], STORAGE_KEY="nmt-english-pwa-v1";
 const TOPICS=["Грамматика","Лексика","Use of English","Чтение"], $=id=>document.getElementById(id);
 const freshSession=date=>({date,ids:shuffle(QUESTIONS.map(q=>q.id),hash(date)).slice(0,20),index:0,answers:[]});
 // Учебные сутки идут по московскому времени: с 03:00 до 02:59 следующего дня.
@@ -45,24 +45,24 @@ function renderDaily(){const area=$("quiz-area");if(state.session.index>=20){are
 function wordMarkup(value){return esc(value).replace(/([A-Za-z]+(?:[’'][A-Za-z]+)*)/g, (word)=>`<span class="dict-word" data-dict-word="${word.replace(/&/g,'&amp;')}" tabindex="0" role="button" aria-label="Перевести ${word}">${word}</span>`);}
 function bindDictionary(area){
  area.querySelectorAll("[data-dict-word]").forEach(el=>{
-  const open=()=>{if(!window.getSelection()?.toString().trim())openDictionary(el.textContent);};
+  const open=(e)=>{e.stopPropagation();if(!window.getSelection()?.toString().trim())openDictionary(el.textContent);};
   el.addEventListener("click",open);
-  el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openDictionary(el.textContent);}});
+  el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();e.stopPropagation();openDictionary(el.textContent);}});
  });
  area.querySelectorAll("[data-dict-option]").forEach(el=>el.addEventListener("click",e=>{e.stopPropagation();openDictionary(el.dataset.dictOption);}));
  const translate=area.querySelector("[data-translate-selection]");
  if(translate)translate.addEventListener("click",()=>{
   const selection=window.getSelection(),value=selection?.toString().trim();
   if(value){openDictionary(value);selection.removeAllRanges();}
-  else openDictionary(area.querySelector(".question-text")?.textContent||"");
+  else dictionaryField("dict-status","Сначала выдели английское слово или фразу в тексте вопроса.");
  });
 }
 function renderQuestion(area,q,n,total,chosen,done,mode){if(!q){area.innerHTML='<p class="empty-state">Вопросы не найдены. Проверь, загружен ли questions.js.</p>';return;}
-const opts=q.o.map((v,i)=>{let c="option";if(chosen===i)c+=" selected";if(done&&i===q.a)c+=" correct";else if(done&&i===chosen)c+=" wrong";return `<button class="${c}" data-choice="${i}" ${done?"disabled":""}><span class="option-letter">${"ABCD"[i]}</span><span class="option-text">${esc(v)}</span><span class="dict-option-action" data-dict-option="${esc(v)}" role="button" tabindex="0" aria-label="Перевести вариант ${"ABCD"[i]}">📖</span></button>`;}).join("");
-const feedback=done?`<div class="feedback show"><h3>${chosen===q.a?"Верно!":"Разберём ответ"}</h3><p class="answer-line">Правильный ответ: ${esc(q.o[q.a])}</p><p>${chosen===q.a?esc(q.e):`Твой вариант «${esc(q.o[chosen])}» не подходит. ${esc(q.e)}`}</p></div>`:"";
+const opts=q.o.map((v,i)=>{let c="option";if(chosen===i)c+=" selected";if(done&&i===q.a)c+=" correct";else if(done&&i===chosen)c+=" wrong";return `<button class="${c}" data-choice="${i}"><span class="option-letter">${"ABCD"[i]}</span><span class="option-text">${wordMarkup(v)}</span></button>`;}).join("");
+const feedback=done?`<div class="feedback show"><h3>${chosen===q.a?"Верно!":"Разберём ответ"}</h3><p class="answer-line">Правильный ответ: ${wordMarkup(q.o[q.a])}</p><p>${chosen===q.a?wordMarkup(q.e):`Твой вариант «${wordMarkup(q.o[chosen])}» не подходит. ${wordMarkup(q.e)}`}</p></div>`:"";
 area.innerHTML=`<article class="question-card"><div class="question-meta"><span class="topic-tag">${esc(q.topic)}</span><span class="level-tag">Уровень ${q.level} · ${n}/${total}</span></div><h2 class="question-text">${wordMarkup(q.q)}</h2><p class="dict-help">Нажми на слово или выдели фразу и нажми «Перевести выделенное».</p><button type="button" class="dict-selection-button" data-translate-selection>📖 Перевести выделенное</button><div class="options">${opts}</div>${feedback}<button class="primary-button" id="answerAction" ${!done&&chosen===null?"disabled":""}>${done?(mode==="daily"?"Следующее задание":"Следующий вопрос"):"Проверить ответ"}</button></article>`;
 bindDictionary(area);
-area.querySelectorAll("[data-choice]").forEach(b=>b.addEventListener("click",()=>{if(mode==="daily"){selected=+b.dataset.choice;renderDaily();}else{practice.selected=+b.dataset.choice;renderPractice();}}));
+area.querySelectorAll("[data-choice]").forEach(b=>b.addEventListener("click",()=>{if(done)return;if(mode==="daily"){selected=+b.dataset.choice;renderDaily();}else{practice.selected=+b.dataset.choice;renderPractice();}}));
 $("answerAction").addEventListener("click",()=>{if(mode==="daily"){if(!submitted)submitDaily();else nextDaily();}else{if(!practice.submitted)submitPractice();else nextPractice();}});
 }
 const DICT_LOCAL={
@@ -101,27 +101,56 @@ const DICT_LOCAL={
  "water samples":["пробы воды","/ˈwɔːtə ˈsɑːmpəlz/","Образцы воды, взятые для анализа."],
  "marine research":["морские исследования","/məˈriːn rɪˈsɜːtʃ/","Научное изучение моря."],
  "sources of pollution":["источники загрязнения","/ˈsɔːsɪz əv pəˈluːʃən/","Причины или места возникновения загрязнения."],
- "identify pollution sources":["выявить источники загрязнения","/aɪˈdentɪfaɪ pəˈluːʃən ˈsɔːsɪz/","Найти причины или места, откуда поступают загрязняющие вещества."]
+ "identify pollution sources":["выявить источники загрязнения","/aɪˈdentɪfaɪ pəˈluːʃən ˈsɔːsɪz/","Найти причины или места, откуда поступают загрязняющие вещества."],
+ "travel":["путешествие; поездка; путешествовать; ездить","/ˈtræv.əl/","Как существительное означает поездку или путешествие; как глагол — путешествовать или перемещаться."],
+ "light":["свет; лампа; лёгкий; светлый; зажигать","/laɪt/","Может обозначать освещение, источник света, небольшой вес или светлый оттенок; как глагол — зажигать."],
+ "charge":["плата; стоимость; заряд; обвинение; заряжать; поручать","/tʃɑːdʒ/","Значение зависит от контекста: деньги за услугу, электрический заряд, официальное обвинение или действие по зарядке."],
+ "view":["вид; взгляд; мнение; смотреть; рассматривать","/vjuː/","Как существительное означает то, что видно, или точку зрения; как глагол — смотреть или рассматривать."],
+ "occasion":["случай; событие; повод","/əˈkeɪ.ʒən/","Определённый случай, событие или обстоятельство, по которому что-либо происходит."],
+ "damage":["ущерб; повреждение; вред; повреждать","/ˈdæm.ɪdʒ/","Вред или физическое повреждение; как глагол — причинять вред."],
+ "goal":["цель; задача; гол","/ɡəʊl/","Результат, которого хотят достичь; в спорте — гол."],
+ "herbs":["травы; зелень; лекарственные травы","/hɜːbz/","Растения, используемые в кулинарии, медицине или для аромата."]
 };
 let dictionaryRequest=0;
 function closeDictionary(){const dlg=$("dictionaryDialog");if(dlg.open)dlg.close();}
 function dictionaryField(id,value){$(id).textContent=value||"Нет данных";}
 async function openDictionary(raw){
  const term=String(raw||"").replace(/\s+/g," ").trim().slice(0,180);if(!term)return;
- const dlg=$("dictionaryDialog");dictionaryField("dict-term",term);dictionaryField("dict-translation","Ищем перевод…");dictionaryField("dict-ipa","Загрузка…");dictionaryField("dict-definition","Загрузка…");dictionaryField("dict-status","Для новых слов нужен интернет. Перевод может зависеть от контекста.");
+ const dlg=$("dictionaryDialog");dictionaryField("dict-term",term);dictionaryField("dict-translation","Ищем варианты перевода…");dictionaryField("dict-ipa","Загружаем транскрипцию…");dictionaryField("dict-definition","Подбираем объяснение…");dictionaryField("dict-status","Для новых слов требуется интернет. Значения показываются с учётом доступных словарных данных.");
  if(!dlg.open)dlg.showModal();const request=++dictionaryRequest;
- const local=DICT_LOCAL[term.toLowerCase()];if(local){dictionaryField("dict-translation",local[0]);dictionaryField("dict-ipa",local[1]);dictionaryField("dict-definition",local[2]);dictionaryField("dict-status","Встроенный словарь · доступно без интернета");return;}
- const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8500);
+ const local=DICT_LOCAL[term.toLowerCase()];
+ if(local){dictionaryField("dict-translation",local[0]);dictionaryField("dict-ipa",local[1]);dictionaryField("dict-definition",local[2]);dictionaryField("dict-status","Встроенный словарь · доступно без интернета");return;}
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
+ const fetchJson=(url)=>fetch(url,{signal:controller.signal}).then(r=>r.ok?r.json():null).catch(()=>null);
  try{
-  const promises=[fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(term)}&langpair=en%7Cru`,{signal:controller.signal}).then(r=>{if(!r.ok)throw Error("translate");return r.json();}).catch(()=>null)];
-  if(/^[a-z]+(?:['’-][a-z]+)*$/i.test(term))promises.push(fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(term)}`,{signal:controller.signal}).then(r=>r.ok?r.json():null).catch(()=>null));
-  const [tr,dict]=await Promise.all(promises);if(request!==dictionaryRequest||!dlg.open)return;
-  const translation=tr?.responseData?.translatedText;dictionaryField("dict-translation",translation&&translation.toLowerCase()!==term.toLowerCase()?translation:"Перевод не найден");
-  const entry=Array.isArray(dict)?dict[0]:null;dictionaryField("dict-ipa",entry?.phonetic||entry?.phonetics?.find(x=>x.text)?.text||"Транскрипция недоступна для этой фразы");
-  const meaning=entry?.meanings?.[0];const definition=meaning?.definitions?.[0]?.definition;
-  dictionaryField("dict-definition",definition?definition+" (объяснение на английском)":"Объяснение для этого выражения пока недоступно.");
-  dictionaryField("dict-status",translation?"Онлайн-перевод · проверь значение по контексту":"Нет результата. Проверь интернет или попробуй другое выражение.");
- }catch(e){if(request===dictionaryRequest){dictionaryField("dict-translation","Не удалось получить перевод");dictionaryField("dict-ipa","Нет данных");dictionaryField("dict-definition","Подключись к интернету и попробуй ещё раз.");dictionaryField("dict-status","Онлайн-словарь временно недоступен.");}}finally{clearTimeout(timeout);}
+  const words=(term.match(/[A-Za-z]+(?:['’-][A-Za-z]+)*/g)||[]).slice(0,8);
+  const singleWord=words.length===1&&/^[A-Za-z]+(?:['’-][A-Za-z]+)*$/.test(term);
+  const translationPromise=fetchJson(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(term)}&langpair=en%7Cru`);
+  const dictPromises=words.map(w=>fetchJson(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(w)}`));
+  const datamusePromise=singleWord?fetchJson(`https://api.datamuse.com/words?sp=${encodeURIComponent(term)}&md=r&max=1`):Promise.resolve(null);
+  const [tr,dictResults,datamuse]=await Promise.all([translationPromise,Promise.all(dictPromises),datamusePromise]);
+  if(request!==dictionaryRequest||!dlg.open)return;
+  const translations=[];
+  const addTranslation=value=>{if(typeof value!=="string")return;value=value.replace(/&quot;/g,'"').replace(/&#39;/g,"'").trim();if(value&&value.toLowerCase()!==term.toLowerCase()&&!translations.some(x=>x.toLowerCase()===value.toLowerCase()))translations.push(value);};
+  addTranslation(tr?.responseData?.translatedText);
+  (tr?.matches||[]).sort((a,b)=>(Number(b.match)||0)-(Number(a.match)||0)).forEach(m=>addTranslation(m.translation));
+  dictionaryField("dict-translation",translations.length?translations.slice(0,7).join("; "):"Перевод не найден");
+  const entries=dictResults.map(x=>Array.isArray(x)?x[0]:null).filter(Boolean);
+  const phonetics=[];
+  entries.forEach((entry,i)=>{const p=entry.phonetic||entry.phonetics?.find(x=>x.text)?.text;if(p)phonetics.push(words[i]&&words.length>1?`${words[i]} ${p}`:p);});
+  if(!phonetics.length&&Array.isArray(datamuse)&&datamuse[0]?.tags){const pron=datamuse[0].tags.find(x=>x.startsWith("pron:"));if(pron)phonetics.push(pron.slice(5));}
+  dictionaryField("dict-ipa",phonetics.length?phonetics.join(" · "):(singleWord?"Транскрипция не найдена в доступных словарях":"Транскрипция отдельных слов не найдена"));
+  const definitions=[];
+  entries.forEach(entry=>(entry.meanings||[]).forEach(meaning=>(meaning.definitions||[]).slice(0,2).forEach(d=>{if(d.definition&&!definitions.includes(d.definition))definitions.push(d.definition);})));
+  let explanation=definitions.slice(0,3).join(" ");
+  if(explanation){
+   const defTr=await fetchJson(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(explanation.slice(0,450))}&langpair=en%7Cru`);
+   if(request!==dictionaryRequest||!dlg.open)return;
+   explanation=defTr?.responseData?.translatedText||explanation+" (объяснение на английском)";
+   dictionaryField("dict-definition",explanation);
+  }else dictionaryField("dict-definition","Подробное объяснение для этой фразы пока недоступно.");
+  dictionaryField("dict-status",translations.length?"Онлайн-словарь · варианты перевода собраны из доступных совпадений":"Нет результата перевода. Проверь интернет или попробуй выделить слово отдельно.");
+ }catch(e){if(request===dictionaryRequest){dictionaryField("dict-translation","Не удалось получить перевод");dictionaryField("dict-ipa","Транскрипция временно недоступна");dictionaryField("dict-definition","Подключись к интернету и попробуй ещё раз.");dictionaryField("dict-status","Онлайн-словарь временно недоступен.");}}finally{clearTimeout(timeout);}
 }
 $("dict-close").addEventListener("click",closeDictionary);
 $("dictionaryDialog").addEventListener("close",()=>{dictionaryRequest++;});
